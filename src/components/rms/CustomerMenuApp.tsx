@@ -234,7 +234,7 @@ export default function CustomerMenuApp() {
       <header className="bg-[#2C1B17] text-white sticky top-0 z-40 shadow-xl">
         <div className="px-4 py-2.5 flex items-center justify-between max-w-lg mx-auto">
           <div className="flex items-center gap-2.5">
-            <img src={logoUrl} alt="Fana" className="w-10 h-10 rounded-full object-cover bg-white p-0.5" />
+            <img src={logoUrl} alt="Fana" className="w-10 h-10 rounded-full object-contain bg-white p-0.5" />
             <div>
               <p className="font-serif font-bold text-sm text-amber-100 leading-none">{settings.cafe_name || "Fana Cafe"}</p>
               <p className="text-[10px] text-[#C9A227] font-bold uppercase tracking-wider">Menu • {tableName}</p>

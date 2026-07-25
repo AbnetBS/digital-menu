@@ -314,7 +314,7 @@ export default function AdminPanel({
                 <img
                   src={settingsForm.logo_url || "/logo.png"}
                   alt="Logo preview"
-                  className="w-16 h-16 rounded-full object-cover bg-white border-2 border-[#C9A227]"
+                  className="w-16 h-16 rounded-full object-contain bg-white border-2 border-[#C9A227] p-1"
                 />
                 <div className="flex-1 space-y-2">
                   <label className="flex items-center justify-center gap-2 w-full bg-[#C9A227] hover:bg-amber-400 text-[#2C1B17] font-extrabold text-xs py-2.5 px-4 rounded-xl cursor-pointer shadow transition">

@@ -63,7 +63,7 @@ export default function Navbar({ settings, onOpenAdmin, isAdminLoggedIn }: Navba
             <img
               src={String(settings.logo_url || "/logo.png")}
               alt={cafeName}
-              className="w-11 h-11 rounded-full object-cover bg-white border-2 border-[#C9A227] shadow-md group-hover:scale-105 transition-transform"
+              className="w-11 h-11 rounded-full object-contain bg-white border-2 border-[#C9A227] shadow-md group-hover:scale-105 transition-transform p-0.5"
             />
             <div className="flex flex-col">
               <span className="text-xl font-black tracking-wider text-white font-serif group-hover:text-[#C9A227] transition-colors">
