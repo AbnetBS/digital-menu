@@ -74,6 +74,26 @@ export default function AdminPanel({
     }
   };
 
+  // Auto-save ONE setting key immediately (used right after photo selection)
+  const autoSaveSetting = async (key: string, value: string, label: string) => {
+    setSettingsMsg(`⏳ Uploading ${label}...`);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [key]: value }),
+      });
+      if (res.ok) {
+        setSettingsMsg(`✓ ${label} saved instantly — refresh the site to see it!`);
+        onRefreshData();
+      } else {
+        setSettingsMsg(`✗ Failed to save ${label}. Try a smaller JPG/PNG.`);
+      }
+    } catch {
+      setSettingsMsg(`✗ Network error saving ${label}.`);
+    }
+  };
+
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingSettings(true);
@@ -306,7 +326,11 @@ export default function AdminPanel({
                       className="hidden"
                       onChange={(e) => {
                         const f = e.target.files?.[0];
-                        if (f) toBase64(f, (d) => setSettingsForm({ ...settingsForm, logo_url: d }));
+                        if (f) toBase64(f, (d) => {
+                          setSettingsForm((prev) => ({ ...prev, logo_url: d }));
+                          // AUTO-SAVE instantly — no need to press Save after this
+                          autoSaveSetting("logo_url", d, "Logo");
+                        });
                       }}
                     />
                   </label>
@@ -334,7 +358,7 @@ export default function AdminPanel({
               <label className="flex items-center justify-center gap-2 w-full bg-[#C9A227] hover:bg-amber-400 text-[#2C1B17] font-extrabold text-xs py-3 px-4 rounded-xl cursor-pointer shadow transition">
                 <Upload className="w-4 h-4" />
                 <span>Upload Custom Cafe Image From Device</span>
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) toBase64(f, (d) => setSettingsForm({ ...settingsForm, hero_bg_image: d })); }} />
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) toBase64(f, (d) => { setSettingsForm((prev) => ({ ...prev, hero_bg_image: d })); autoSaveSetting("hero_bg_image", d, "Hero photo"); }); }} />
               </label>
               <input
                 type="text"
