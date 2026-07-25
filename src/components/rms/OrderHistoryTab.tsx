@@ -19,6 +19,19 @@ export default function OrderHistoryTab() {
     }
   };
 
+  const cleanOldReceipts = async () => {
+    if (
+      !confirm(
+        "Free up storage?\n\nRemoves receipt PHOTOS from paid bills older than 30 days.\nOrder records (items, totals, method) stay in history."
+      )
+    )
+      return;
+    const r = await fetch("/api/tickets/cleanup", { method: "POST" });
+    const d = await r.json();
+    alert(d.message || "Cleanup done");
+    load();
+  };
+
   const deleteOrder = async (id: number, tableName: string, amount: number) => {
     if (!confirm(`Delete this order history?\n\n${tableName} • ${amount} ETB\n\nThis permanently removes the record from the database.`)) return;
     const r = await fetch(`/api/tickets?id=${id}`, { method: "DELETE" });
@@ -58,9 +71,18 @@ export default function OrderHistoryTab() {
           <h2 className="text-xl font-serif font-bold text-amber-100">Order History ({filtered.length})</h2>
           <p className="text-xs text-stone-400">Every completed & cancelled bill — search by date, table, waiter, method or status.</p>
         </div>
-        <button onClick={load} className="p-2 bg-white/10 hover:bg-white/20 text-amber-200 rounded-xl self-start" title="Refresh">
-          <RefreshCw className="w-4 h-4" />
-        </button>
+        <div className="flex gap-2 self-start">
+          <button
+            onClick={cleanOldReceipts}
+            className="p-2 bg-emerald-800 hover:bg-emerald-700 text-emerald-100 rounded-xl text-xs font-bold flex items-center gap-1.5"
+            title="Clear receipt photos older than 30 days to free storage"
+          >
+            <Trash2 className="w-4 h-4" /> Clean Old Receipts
+          </button>
+          <button onClick={load} className="p-2 bg-white/10 hover:bg-white/20 text-amber-200 rounded-xl" title="Refresh">
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Filters */}

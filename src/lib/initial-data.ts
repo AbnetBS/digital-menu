@@ -1,5 +1,5 @@
 export const DEFAULT_SETTINGS = {
-  cafe_name: "Fana Cafe & Restaurant",
+  cafe_name: "FanaQueen Cafe & Restaurant",
   tagline: "Where Great Coffee Meets Beautiful Moments in Addis Ababa",
   hero_title: "Where Great Coffee Meets Beautiful Moments",
   hero_subtitle: "A cozy café and restaurant located at Golagul Building, 22 Square (Djibouti Street, Bole, Addis Ababa). Designed for coffee lovers, food enthusiasts, families, and friends.",
@@ -16,6 +16,7 @@ export const DEFAULT_SETTINGS = {
   about_description: "Ethiopia is recognized as the birthplace of Arabica coffee. Located at Golagul Building in 22 Square, Fana Cafe offers a relaxing atmosphere, open kitchen transparency, specialty fruit punches, authentic Ethiopian meals like Beyaynet, and our famous Fana Macchiato.",
   announcement: "☕ Welcome to Fana Cafe (22 Square, Golagul Building)! Scan your table QR to order.",
   logo_url: "",
+  receipt_enabled: "true",
   admin_password: "fana2026",
 };
 

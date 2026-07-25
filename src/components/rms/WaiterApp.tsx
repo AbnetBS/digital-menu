@@ -6,6 +6,7 @@ import {
   Smartphone, Camera, CheckCircle2, ClipboardList, Search, X, Users, LogOut,
 } from "lucide-react";
 import { MenuItem, Ticket, TicketItem, CafeTable } from "@/types";
+import { compressImage } from "@/lib/image-utils";
 
 interface StaffLite {
   id: number;
@@ -49,6 +50,7 @@ export default function WaiterApp() {
   // Payment
   const [payMethod, setPayMethod] = useState<"cash" | "card" | "online" | null>(null);
   const [receiptImage, setReceiptImage] = useState("");
+  const [receiptEnabled, setReceiptEnabled] = useState(true);
 
   const categories = [
     { slug: "all", name: "All" },
@@ -69,6 +71,11 @@ export default function WaiterApp() {
     fetch("/api/staff?public=1")
       .then((r) => r.json())
       .then((d) => setStaffList(d.filter((s: StaffLite) => s.role === "waiter")))
+      .catch(() => {});
+    // Read owner switch: require receipt photo on card/online payments or not
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((s) => setReceiptEnabled(String(s.receipt_enabled ?? "true") !== "false"))
       .catch(() => {});
   }, []);
 
@@ -631,7 +638,7 @@ export default function WaiterApp() {
             ))}
           </div>
 
-          {payMethod && payMethod !== "cash" && (
+          {payMethod && payMethod !== "cash" && receiptEnabled && (
             <div className="bg-[#2C1B17] rounded-2xl border border-stone-700 p-4 space-y-3">
               <p className="text-xs font-bold text-amber-200 flex items-center gap-1.5">
                 <Camera className="w-4 h-4 text-[#C9A227]" /> Receipt Photo (optional)
@@ -645,12 +652,16 @@ export default function WaiterApp() {
                   accept="image/*"
                   capture="environment"
                   className="hidden"
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const f = e.target.files?.[0];
                     if (!f) return;
-                    const r = new FileReader();
-                    r.onload = (ev) => setReceiptImage(ev.target?.result as string);
-                    r.readAsDataURL(f);
+                    try {
+                      // Compress on device: ~4MB camera photo → ~80KB (saves 95% of DB storage)
+                      const small = await compressImage(f, 800, 0.65);
+                      setReceiptImage(small);
+                    } catch {
+                      showToast("Could not read that photo — try again");
+                    }
                   }}
                 />
               </label>

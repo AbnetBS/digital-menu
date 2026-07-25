@@ -3,9 +3,10 @@
 import { useState } from "react";
 import {
   Settings, Utensils, Star, Lock, Plus, Trash2, Edit3, CheckCircle2, Save, LogOut, RefreshCw,
-  Eye, EyeOff, Upload, Image as ImageIcon, Camera, TrendingUp, Users, QrCode,
+  Eye, EyeOff, Upload, Image as ImageIcon, Camera, TrendingUp, Users, QrCode, CreditCard,
 } from "lucide-react";
 import { MenuItem, SiteSettings, Review, Category, GalleryItem } from "@/types";
+import { compressImage } from "@/lib/image-utils";
 import ReportsTab from "@/components/rms/ReportsTab";
 import StaffTab from "@/components/rms/StaffTab";
 import TablesQrTab from "@/components/rms/TablesQrTab";
@@ -44,6 +45,7 @@ export default function AdminPanel({
       settings.hero_bg_image ||
       "https://images.pexels.com/photos/16563658/pexels-photo-16563658.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1080&w=1920",
     logo_url: String(settings.logo_url || ""),
+    receipt_enabled: String(settings.receipt_enabled ?? "true"),
     phone: settings.phone || "0911 065 022",
     address: settings.address || "Golagul Building, 22 Square, Djibouti Street, Bole, Addis Ababa, Ethiopia",
     plus_code: settings.plus_code || "2Q7Q+W2 Addis Ababa",
@@ -62,14 +64,14 @@ export default function AdminPanel({
   const [showPassword, setShowPassword] = useState(false);
   const [passwordMsg, setPasswordMsg] = useState("");
 
-  const toBase64 = (file: File, cb: (data: string) => void) => {
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Please select an image smaller than 5MB.");
-      return;
+  const toBase64 = async (file: File, cb: (data: string) => void) => {
+    try {
+      // Always compress before saving to the database (~95% storage saved)
+      const small = await compressImage(file, 1000, 0.72);
+      cb(small);
+    } catch {
+      alert("Couldn't read that image. Please try a JPG/PNG under 10MB.");
     }
-    const reader = new FileReader();
-    reader.onload = (e) => cb(e.target?.result as string);
-    reader.readAsDataURL(file);
   };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
@@ -251,11 +253,43 @@ export default function AdminPanel({
               </div>
             )}
 
+            {/* Receipt photo switch — controls waiter card/online payment flow */}
+            <div className="bg-[#3D2314] p-5 rounded-2xl border border-[#C9A227]/30 flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-amber-200 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-[#C9A227]" /> Receipt Photo on Card/Telebirr Payments
+                </h3>
+                <p className="text-[11px] text-stone-400 mt-1">
+                  ON = waiter photographs each card/Telebirr receipt (stored in DB, ~70KB each).
+                  OFF = receipts skipped entirely (payments still recorded normally — zero photo storage).
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setSettingsForm({
+                    ...settingsForm,
+                    receipt_enabled: settingsForm.receipt_enabled === "true" ? "false" : "true",
+                  })
+                }
+                className={`px-4 py-2.5 rounded-xl text-xs font-black transition shrink-0 ${
+                  settingsForm.receipt_enabled === "true"
+                    ? "bg-emerald-600 text-white"
+                    : "bg-stone-700 text-stone-300"
+                }`}
+              >
+                {settingsForm.receipt_enabled === "true" ? "ON" : "OFF"}
+              </button>
+            </div>
+
             {/* Logo upload */}
             <div className="bg-[#3D2314] p-5 rounded-2xl border border-[#C9A227]/30 space-y-3">
               <h3 className="text-sm font-bold text-amber-200 flex items-center gap-2">
-                <Camera className="w-4 h-4 text-[#C9A227]" /> Restaurant Logo (shown in navbar, QR menu & staff apps)
+                <Camera className="w-4 h-4 text-[#C9A227]" /> Restaurant Logo (navbar, QR menu & staff apps)
               </h3>
+              <p className="text-[11px] text-stone-400">
+                Tip: the logo shows inside a <strong>small circle</strong> — a square or round icon (not wide text banners) looks best, like the official FanaQueen badge.
+              </p>
               <div className="flex items-center gap-4">
                 <img
                   src={settingsForm.logo_url || "/logo.png"}
