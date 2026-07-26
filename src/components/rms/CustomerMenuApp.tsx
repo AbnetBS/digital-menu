@@ -541,7 +541,20 @@ export default function CustomerMenuApp() {
             <div className="p-5 space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <h2 className="font-serif font-bold text-xl text-[#2C1B17] flex-1">{detailItem.name}</h2>
-                <span className="font-serif font-black text-xl text-[#4E342E] whitespace-nowrap">{detailItem.price} ETB</span>
+                {(() => {
+                  const ep = effectivePrice(detailItem);
+                  return ep.onSale ? (
+                    <span className="flex flex-col items-end leading-none whitespace-nowrap">
+                      <span className="text-xs line-through text-stone-400 font-semibold">{detailItem.price} ETB</span>
+                      <span className="font-serif font-black text-xl text-emerald-700">
+                        {ep.price} ETB <span className="text-[10px] bg-emerald-600 text-white px-1.5 py-0.5 rounded font-extrabold align-middle">SALE</span>
+                      </span>
+                      <span className="text-[10px] text-emerald-600 font-bold mt-0.5">You save {ep.savings} ETB{detailItem.saleEnd ? ` • until ${detailItem.saleEnd}` : ""}</span>
+                    </span>
+                  ) : (
+                    <span className="font-serif font-black text-xl text-[#4E342E] whitespace-nowrap">{detailItem.price} ETB</span>
+                  );
+                })()}
               </div>
 
               {/* FULL description — nothing hidden */}
@@ -581,7 +594,7 @@ export default function CustomerMenuApp() {
                       onClick={() => setQty(detailItem, 1)}
                       className="flex-1 bg-gradient-to-r from-[#C9A227] to-amber-500 text-[#2C1B17] font-black text-sm uppercase py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg"
                     >
-                      <Plus className="w-4 h-4" /> Add to Order — {detailItem.price} ETB
+                      <Plus className="w-4 h-4" /> Add to Order — {effectivePrice(detailItem).price} ETB
                     </button>
                   )}
                 </div>
