@@ -12,7 +12,11 @@ export async function GET() {
     const allSettings = await db.select().from(siteSettings);
     const settingsMap: Record<string, string> = {};
     allSettings.forEach((s) => {
-      settingsMap[s.key] = s.value;
+      let v = s.value;
+      // Brand guard: the business is Fana Cafe & Restaurant — never serve the
+      // historical "FanaQueen" text to any client, even if the DB ever holds it.
+      if (v && v.includes("FanaQueen")) v = v.replace(/FanaQueen/g, "Fana Cafe");
+      settingsMap[s.key] = v;
     });
     return NextResponse.json(settingsMap);
   } catch (error) {

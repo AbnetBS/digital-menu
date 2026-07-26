@@ -16,7 +16,7 @@ export default function Navbar({ settings, onOpenAdmin, isAdminLoggedIn }: Navba
   const [showAnnouncement, setShowAnnouncement] = useState(true);
 
   const phone = settings.phone || "0911 065 022";
-  const cafeName = settings.cafe_name || "FANA CAFE";
+  const cafeName = String(settings.cafe_name || "FANA CAFE").replace(/FanaQueen/g, "Fana Cafe");
   const announcement = settings.announcement || "☕ Welcome to Fana Cafe!";
 
   const navLinks = [

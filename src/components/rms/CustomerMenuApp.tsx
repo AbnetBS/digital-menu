@@ -49,6 +49,8 @@ export default function CustomerMenuApp() {
   const [revMsg, setRevMsg] = useState("");
 
   const logoUrl = String(settings.logo_url || "/logo.png");
+  // Brand guard: business is Fana Cafe & Restaurant — never show FanaQueen text
+  const brandName = String(settings.cafe_name || "Fana Cafe & Restaurant").replace(/FanaQueen/g, "Fana Cafe");
 
   // SPEED: show cached menu + announcements INSTANTLY on repeat visits,
   // then refresh silently in the background (stale-while-revalidate)
@@ -340,7 +342,7 @@ export default function CustomerMenuApp() {
           <div className="flex items-center gap-2.5">
             <img src={logoUrl} alt="Fana" className="w-10 h-10 rounded-full object-contain bg-white p-0.5" />
             <div>
-              <p className="font-serif font-bold text-sm text-amber-100 leading-none">{settings.cafe_name || "Fana Cafe"}</p>
+              <p className="font-serif font-bold text-sm text-amber-100 leading-none">{brandName}</p>
               <p className="text-[10px] text-[#C9A227] font-bold uppercase tracking-wider">Menu • {tableName}</p>
             </div>
           </div>
@@ -760,7 +762,7 @@ export default function CustomerMenuApp() {
       <footer className="bg-[#1C120F] text-stone-400 mt-10 pb-24 pt-8">
         <div className="max-w-lg mx-auto px-4 text-center space-y-4">
           <img src={logoUrl} alt="Fana Cafe" className="w-12 h-12 rounded-full object-contain bg-white mx-auto border-2 border-[#C9A227] p-0.5" />
-          <p className="font-serif font-bold text-amber-100 text-sm">{settings.cafe_name || "Fana Cafe & Restaurant"}</p>
+          <p className="font-serif font-bold text-amber-100 text-sm">{brandName}</p>
           <a href={`tel:${String(settings.phone || "0911065022").replace(/\s+/g, "")}`} className="inline-flex items-center gap-2 text-[#C9A227] font-bold text-sm">
             <Phone className="w-4 h-4" /> {settings.phone || "0911 065 022"}
           </a>
@@ -776,7 +778,7 @@ export default function CustomerMenuApp() {
             </a>
           </div>
           <p className="text-[10px] text-stone-600 pt-2">
-            © {new Date().getFullYear()} {settings.cafe_name || "Fana Cafe"} • {settings.plus_code || "2Q7Q+W2 Addis Ababa"}
+            © {new Date().getFullYear()} {brandName} • {settings.plus_code || "2Q7Q+W2 Addis Ababa"}
           </p>
           <div className="bg-[#C9A227]/10 border border-[#C9A227]/30 rounded-xl py-2.5 px-3">
             <p className="text-[11px] font-black text-[#C9A227] tracking-wider uppercase">Powered by Abnet Gobezay</p>

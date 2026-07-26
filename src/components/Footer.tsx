@@ -10,7 +10,7 @@ interface FooterProps {
 }
 
 export default function Footer({ settings, onOpenAdmin, isAdminLoggedIn }: FooterProps) {
-  const cafeName = settings.cafe_name || "FANA CAFE";
+  const cafeName = String(settings.cafe_name || "FANA CAFE").replace(/FanaQueen/g, "Fana Cafe");
   const tagline = settings.tagline || "Where Great Coffee Meets Beautiful Moments";
   const phone = settings.phone || "0911 065 022";
   const address = settings.address || "Addis Ababa, Ethiopia";
