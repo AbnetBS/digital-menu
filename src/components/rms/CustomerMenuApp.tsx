@@ -358,52 +358,77 @@ export default function CustomerMenuApp() {
       {/* ── 📢 DAILY BOARD — rotating announcements (auto-slide every few seconds when 2+) ── */}
       {announcements.length > 0 && (
         <div className="mx-4 mt-3 max-w-lg lg:mx-auto">
-          <div className="relative bg-gradient-to-r from-[#C9A227] via-[#E2B93B] to-[#C9A227] rounded-2xl shadow-xl overflow-hidden">
-            {/* slide content */}
-            <div className="p-4 min-h-[84px]">
-              {announcements[slideIdx]?.imageUrl && (
-                <img src={announcements[slideIdx].imageUrl!} alt="" className="w-full h-28 object-cover rounded-xl mb-2 border border-white/40" />
-              )}
-              <p className="font-serif font-black text-[#2C1B17] text-base leading-tight">
-                {announcements[slideIdx]?.title}
-              </p>
-              {announcements[slideIdx]?.description && (
-                <p className="text-[#3D2314] text-xs font-semibold mt-0.5 leading-snug">
-                  {announcements[slideIdx]?.description}
-                </p>
-              )}
-            </div>
+          {(() => {
+            const a = announcements[slideIdx];
+            const hasPhoto = Boolean(a?.imageUrl);
+            return (
+              <div className="relative rounded-2xl shadow-xl overflow-hidden min-h-[110px]">
+                {/* full-bleed photo background (no frame) */}
+                {hasPhoto && (
+                  <>
+                    <img src={a!.imageUrl!} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    {/* dark scrim so white text always pops, on any photo */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/15" />
+                  </>
+                )}
 
-            {/* controls — only when sliding is possible */}
-            {announcements.length > 1 && (
-              <>
-                <button
-                  onClick={() => setSlideIdx((slideIdx - 1 + announcements.length) % announcements.length)}
-                  className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/25 text-white flex items-center justify-center"
-                  aria-label="Previous"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setSlideIdx((slideIdx + 1) % announcements.length)}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/25 text-white flex items-center justify-center"
-                  aria-label="Next"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-                <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1.5">
-                  {announcements.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setSlideIdx(i)}
-                      className={`w-1.5 h-1.5 rounded-full transition ${i === slideIdx ? "bg-[#2C1B17] w-3" : "bg-white/70"}`}
-                      aria-label={`Slide ${i + 1}`}
-                    />
-                  ))}
+                {/* gold promo card style when there's no image */}
+                {!hasPhoto && <div className="absolute inset-0 bg-gradient-to-r from-[#C9A227] via-[#E2B93B] to-[#C9A227]" />}
+
+                {/* content overlay */}
+                <div className={`relative z-10 p-4 min-h-[110px] flex flex-col justify-end`}>
+                  <p
+                    className={`font-serif font-black text-lg leading-tight ${
+                      hasPhoto ? "text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.9)]" : "text-[#2C1B17]"
+                    }`}
+                  >
+                    {a?.title}
+                  </p>
+                  {a?.description && (
+                    <p
+                      className={`text-[13px] font-semibold mt-0.5 leading-snug ${
+                        hasPhoto ? "text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]" : "text-[#3D2314]"
+                      }`}
+                    >
+                      {a.description}
+                    </p>
+                  )}
                 </div>
-              </>
-            )}
-          </div>
+
+                {/* controls — visible on both photo & gold backgrounds */}
+                {announcements.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setSlideIdx((slideIdx - 1 + announcements.length) % announcements.length)}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 transition"
+                      aria-label="Previous"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setSlideIdx((slideIdx + 1) % announcements.length)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 transition"
+                      aria-label="Next"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
+                      {announcements.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setSlideIdx(i)}
+                          className={`w-1.5 h-1.5 rounded-full transition shadow ${
+                            i === slideIdx ? "bg-white w-3.5" : "bg-white/50"
+                          }`}
+                          aria-label={`Slide ${i + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })()}
         </div>
       )}
 
