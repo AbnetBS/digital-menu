@@ -362,7 +362,7 @@ export default function CustomerMenuApp() {
             const a = announcements[slideIdx];
             const hasPhoto = Boolean(a?.imageUrl);
             return (
-              <div className="relative rounded-2xl shadow-xl overflow-hidden min-h-[110px]">
+              <div className="relative rounded-2xl shadow-xl overflow-hidden min-h-[175px]">
                 {/* full-bleed photo background (no frame) */}
                 {hasPhoto && (
                   <>
@@ -376,9 +376,9 @@ export default function CustomerMenuApp() {
                 {!hasPhoto && <div className="absolute inset-0 bg-gradient-to-r from-[#C9A227] via-[#E2B93B] to-[#C9A227]" />}
 
                 {/* content overlay */}
-                <div className={`relative z-10 p-4 min-h-[110px] flex flex-col justify-end`}>
+                <div className={`relative z-10 p-5 min-h-[175px] flex flex-col justify-end`}>
                   <p
-                    className={`font-serif font-black text-lg leading-tight ${
+                    className={`font-serif font-black text-xl leading-tight ${
                       hasPhoto ? "text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.9)]" : "text-[#2C1B17]"
                     }`}
                   >
