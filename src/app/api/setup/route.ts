@@ -11,6 +11,26 @@ import { ensureDbSeeded } from "@/lib/seed-db";
 export async function GET() {
   const migrateResult = await ensureTablesExist();
   const seedResult = await ensureDbSeeded();
+
+  // One-time data normalizer: undo the historical "FanaQueen" naming in saved settings.
+  // The business is called "Fana Cafe & Restaurant" — any stored mention gets corrected.
+  let normalized = 0;
+  try {
+    const { siteSettings } = await import("@/db/schema");
+    const { db } = await import("@/db");
+    const { eq } = await import("drizzle-orm");
+    const rows = await db.select().from(siteSettings);
+    for (const row of rows) {
+      if (row.value && row.value.includes("FanaQueen")) {
+        const fixed = row.value.replace(/FanaQueen/g, "Fana Cafe");
+        await db.update(siteSettings).set({ value: fixed }).where(eq(siteSettings.key, row.key));
+        normalized++;
+      }
+    }
+  } catch (e) {
+    console.error("Settings normalizer error:", e);
+  }
+
   const tableReport = await checkTablesReport();
   const insertTest = await insertSmokeTest();
 
@@ -26,6 +46,7 @@ export async function GET() {
         : "Some steps need attention. See details below.",
       migration_errors: migrateResult.errors ?? [],
       seed_result: seedResult,
+      settings_normalized_fanaqueen_to_fana_cafe: normalized,
       tables: tableReport,
       insert_smoke_test: insertTest,
       next_step: allOk

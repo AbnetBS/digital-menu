@@ -313,7 +313,7 @@ export default function AdminPanel({
                 <Camera className="w-4 h-4 text-[#C9A227]" /> Restaurant Logo (navbar, QR menu & staff apps)
               </h3>
               <p className="text-[11px] text-stone-400">
-                Tip: the logo shows inside a <strong>small circle</strong> — a square or round icon (not wide text banners) looks best, like the official FanaQueen badge.
+                Tip: the logo shows inside a <strong>small circle</strong> — a square or round icon (not wide text banners) looks best, like the official Fana Cafe badge.
               </p>
               <div className="flex items-center gap-4">
                 <img
