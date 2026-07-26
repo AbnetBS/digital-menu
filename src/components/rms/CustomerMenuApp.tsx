@@ -30,6 +30,7 @@ export default function CustomerMenuApp() {
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartEntry[]>([]);
   const [reviewMode, setReviewMode] = useState(false);
+  const [detailItem, setDetailItem] = useState<MenuItem | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
@@ -68,14 +69,20 @@ export default function CustomerMenuApp() {
     [menuItems, category, search]
   );
 
-  const addToCart = (m: MenuItem) => {
+  // Unified quantity control: qty 0 = remove from cart (fixes "accidental Add" confusion)
+  const setQty = (m: MenuItem, qty: number) => {
     if (!m.isAvailable) return;
     setCart((prev) => {
-      const ex = prev.find((c) => c.menuItemId === m.id);
-      if (ex) return prev.map((c) => (c.menuItemId === m.id ? { ...c, quantity: c.quantity + 1 } : c));
-      return [...prev, { menuItemId: m.id, name: m.name, category: m.category, price: m.price, quantity: 1, notes: "" }];
+      const exists = prev.find((c) => c.menuItemId === m.id);
+      if (qty <= 0) return prev.filter((c) => c.menuItemId !== m.id);
+      if (exists) return prev.map((c) => (c.menuItemId === m.id ? { ...c, quantity: qty } : c));
+      return [...prev, { menuItemId: m.id, name: m.name, category: m.category, price: m.price, quantity: qty, notes: "" }];
     });
   };
+
+  const addToCart = (m: MenuItem) => setQty(m, 1);
+
+  const cartQty = (id: number) => cart.find((c) => c.menuItemId === id)?.quantity || 0;
 
   const cartTotal = cart.reduce((s, c) => s + c.price * c.quantity, 0);
   const cartCount = cart.reduce((s, c) => s + c.quantity, 0);
@@ -280,33 +287,60 @@ export default function CustomerMenuApp() {
       {/* menu grid */}
       <div className="px-4 grid grid-cols-2 gap-3 max-w-lg mx-auto">
         {filteredMenu.map((m) => {
-          const inCart = cart.find((c) => c.menuItemId === m.id);
+          const qty = cartQty(m.id);
           const out = !m.isAvailable;
           return (
             <div key={m.id} className={`bg-white rounded-2xl overflow-hidden border shadow-sm ${out ? "opacity-60 border-stone-200" : "border-[#C9A227]/25"}`}>
-              <div className="relative">
+              {/* Tap photo or name → BIG detail view with full description */}
+              <button
+                onClick={() => setDetailItem(m)}
+                className="relative w-full text-left cursor-pointer"
+                title="Tap for full details"
+              >
                 <img src={m.imageUrl} alt={m.name} className="w-full h-28 object-cover" />
+                <span className="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[9px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm">
+                  🔍 Details
+                </span>
                 {out && (
                   <span className="absolute top-2 left-2 bg-rose-600 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full">
                     Out of Stock
                   </span>
                 )}
-              </div>
+              </button>
               <div className="p-3 space-y-1.5">
-                <p className="text-xs font-bold text-[#2C1B17] leading-tight line-clamp-2 min-h-[2rem]">{m.name}</p>
+                <button onClick={() => setDetailItem(m)} className="text-left w-full">
+                  <p className="text-xs font-bold text-[#2C1B17] leading-tight line-clamp-2 min-h-[2rem] hover:text-[#C9A227] transition-colors">{m.name}</p>
+                </button>
                 <p className="text-[10px] text-stone-500 line-clamp-2">{m.description}</p>
                 <div className="flex items-center justify-between pt-1">
                   <span className="font-extrabold text-[#4E342E] text-sm">{m.price} ETB</span>
                   {out ? (
                     <span className="text-[10px] text-stone-400 font-bold">—</span>
+                  ) : qty > 0 ? (
+                    // Inline −/+ stepper — customer can decrease or remove
+                    <div className="flex items-center gap-1.5 bg-stone-100 rounded-lg p-1">
+                      <button
+                        onClick={() => setQty(m, qty - 1)}
+                        className="w-7 h-7 rounded-md bg-white shadow-sm flex items-center justify-center text-[#2C1B17] font-bold hover:bg-rose-50"
+                        aria-label="Decrease"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="font-extrabold w-5 text-center text-[#2C1B17] text-sm">{qty}</span>
+                      <button
+                        onClick={() => setQty(m, qty + 1)}
+                        className="w-7 h-7 rounded-md bg-emerald-600 shadow-sm flex items-center justify-center text-white font-bold"
+                        aria-label="Increase"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   ) : (
                     <button
-                      onClick={() => addToCart(m)}
-                      className={`text-[11px] font-extrabold px-3 py-1.5 rounded-lg flex items-center gap-1 transition ${
-                        inCart ? "bg-emerald-600 text-white" : "bg-[#C9A227] text-[#2C1B17]"
-                      }`}
+                      onClick={() => setQty(m, 1)}
+                      className="text-[11px] font-extrabold px-3 py-1.5 rounded-lg flex items-center gap-1 transition bg-[#C9A227] text-[#2C1B17]"
                     >
-                      <Plus className="w-3 h-3" /> {inCart ? `+${inCart.quantity}` : "Add"}
+                      <Plus className="w-3 h-3" /> Add
                     </button>
                   )}
                 </div>
@@ -321,6 +355,86 @@ export default function CustomerMenuApp() {
           </div>
         )}
       </div>
+
+      {/* ── ITEM DETAIL MODAL — big photo + FULL description ── */}
+      {detailItem && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setDetailItem(null)}>
+          <div
+            className="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative">
+              <img src={detailItem.imageUrl} alt={detailItem.name} className="w-full h-56 sm:h-64 object-cover" />
+              <button
+                onClick={() => setDetailItem(null)}
+                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              {detailItem.badge && (
+                <span className="absolute top-3 left-3 bg-[#C9A227] text-[#2C1B17] text-[10px] font-extrabold uppercase px-3 py-1 rounded-full">
+                  {detailItem.badge}
+                </span>
+              )}
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="font-serif font-bold text-xl text-[#2C1B17] flex-1">{detailItem.name}</h2>
+                <span className="font-serif font-black text-xl text-[#4E342E] whitespace-nowrap">{detailItem.price} ETB</span>
+              </div>
+
+              {/* FULL description — nothing hidden */}
+              <div>
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-stone-400 mb-1">Description</p>
+                <p className="text-sm text-stone-700 leading-relaxed">{detailItem.description}</p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                {detailItem.prepTime && (
+                  <span className="flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-full font-bold">
+                    ⏱ {detailItem.prepTime}
+                  </span>
+                )}
+                {detailItem.dietaryTags &&
+                  detailItem.dietaryTags.split(",").map((t, i) => (
+                    <span key={i} className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full font-bold">
+                      ✓ {t.trim()}
+                    </span>
+                  ))}
+              </div>
+
+              {detailItem.isAvailable ? (
+                <div className="pt-2 border-t border-stone-100 flex items-center gap-3">
+                  {cartQty(detailItem.id) > 0 ? (
+                    <div className="flex items-center gap-2 bg-stone-100 rounded-xl p-1.5">
+                      <button onClick={() => setQty(detailItem, cartQty(detailItem.id) - 1)} className="w-9 h-9 rounded-lg bg-white shadow-sm flex items-center justify-center font-bold">
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="font-extrabold w-7 text-center text-lg">{cartQty(detailItem.id)}</span>
+                      <button onClick={() => setQty(detailItem, cartQty(detailItem.id) + 1)} className="w-9 h-9 rounded-lg bg-emerald-600 shadow-sm flex items-center justify-center text-white font-bold">
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setQty(detailItem, 1)}
+                      className="flex-1 bg-gradient-to-r from-[#C9A227] to-amber-500 text-[#2C1B17] font-black text-sm uppercase py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg"
+                    >
+                      <Plus className="w-4 h-4" /> Add to Order — {detailItem.price} ETB
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="pt-2 border-t border-stone-100">
+                  <span className="block text-center bg-rose-100 text-rose-700 font-bold text-sm py-3 rounded-xl">Out of Stock</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* cart bar */}
       {cart.length > 0 && (
