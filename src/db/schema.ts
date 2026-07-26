@@ -26,7 +26,23 @@ export const menuItems = pgTable("menu_items", {
   dietaryTags: text("dietary_tags"),
   prepTime: varchar("prep_time", { length: 50 }).default("10-15 min"),
   badge: varchar("badge", { length: 50 }),
+  // Automatic scheduled sale price (date-range based, reverts automatically)
+  salePrice: integer("sale_price"),
+  saleStart: varchar("sale_start", { length: 20 }), // YYYY-MM-DD
+  saleEnd: varchar("sale_end", { length: 20 }),
   sortOrder: integer("sort_order").default(0),
+});
+
+// Daily Board — owner's rotating announcements (promotions, sold-out notes, holiday greetings)
+export const announcements = pgTable("announcements", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description").notNull(),
+  imageUrl: text("image_url"), // optional
+  startDate: varchar("start_date", { length: 20 }), // YYYY-MM-DD
+  endDate: varchar("end_date", { length: 20 }),
+  priority: integer("priority").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const reviews = pgTable("reviews", {

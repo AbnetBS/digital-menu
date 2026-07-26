@@ -11,6 +11,7 @@ import ReportsTab from "@/components/rms/ReportsTab";
 import StaffTab from "@/components/rms/StaffTab";
 import TablesQrTab from "@/components/rms/TablesQrTab";
 import OrderHistoryTab from "@/components/rms/OrderHistoryTab";
+import DailyBoardTab from "@/components/rms/DailyBoardTab";
 
 interface AdminPanelProps {
   settings: SiteSettings;
@@ -22,7 +23,7 @@ interface AdminPanelProps {
   onLogout: () => void;
 }
 
-type Tab = "reports" | "menu" | "tables" | "staff" | "gallery" | "reviews" | "history" | "settings" | "security";
+type Tab = "reports" | "menu" | "board" | "tables" | "staff" | "gallery" | "reviews" | "history" | "settings" | "security";
 
 export default function AdminPanel({
   settings,
@@ -188,6 +189,7 @@ export default function AdminPanel({
   const tabs: Array<{ key: Tab; label: string; icon: React.ReactNode }> = [
     { key: "reports", label: "Reports", icon: <TrendingUp className="w-4 h-4" /> },
     { key: "menu", label: `Menu (${menuItems.length})`, icon: <Utensils className="w-4 h-4" /> },
+    { key: "board", label: "Daily Board", icon: <TrendingUp className="w-4 h-4" /> },
     { key: "tables", label: "Tables & QR", icon: <QrCode className="w-4 h-4" /> },
     { key: "staff", label: "Staff", icon: <Users className="w-4 h-4" /> },
     { key: "gallery", label: `Gallery (${galleryItems.length})`, icon: <Camera className="w-4 h-4" /> },
@@ -242,6 +244,9 @@ export default function AdminPanel({
       <div className="max-w-7xl mx-auto">
         {/* REPORTS */}
         {activeTab === "reports" && <ReportsTab />}
+
+        {/* DAILY BOARD */}
+        {activeTab === "board" && <DailyBoardTab />}
 
         {/* ORDER HISTORY */}
         {activeTab === "history" && <OrderHistoryTab />}
@@ -674,6 +679,42 @@ export default function AdminPanel({
                 <div>
                   <label className="block text-xs font-bold text-amber-200 mb-1">Prep Time (optional)</label>
                   <input type="text" value={editingItem.prepTime || "10 min"} onChange={(e) => setEditingItem({ ...editingItem, prepTime: e.target.value })} className="w-full bg-[#3D2314] border border-stone-700 rounded-xl p-2.5 text-xs text-white" />
+                </div>
+              </div>
+
+              {/* SCHEDULED SALE PRICE — automatically applies between dates, auto-reverts after */}
+              <div className="bg-[#3D2314] p-4 rounded-2xl border border-emerald-700/40 space-y-3">
+                <p className="text-xs font-bold text-emerald-300">🏷 Auto Sale Price (optional)</p>
+                <p className="text-[10px] text-stone-400">Sets a SALE price between the start & end dates. After the end date, the normal price returns automatically.</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-emerald-200 mb-1">Sale Price (ETB)</label>
+                    <input
+                      type="number"
+                      value={editingItem.salePrice ?? ""}
+                      onChange={(e) => setEditingItem({ ...editingItem, salePrice: e.target.value ? Number(e.target.value) : null })}
+                      placeholder="e.g. 180"
+                      className="w-full bg-[#2C1B17] border border-stone-700 rounded-xl p-2 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-emerald-200 mb-1">Start</label>
+                    <input
+                      type="date"
+                      value={editingItem.saleStart || ""}
+                      onChange={(e) => setEditingItem({ ...editingItem, saleStart: e.target.value })}
+                      className="w-full bg-[#2C1B17] border border-stone-700 rounded-xl p-2 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-emerald-200 mb-1">End</label>
+                    <input
+                      type="date"
+                      value={editingItem.saleEnd || ""}
+                      onChange={(e) => setEditingItem({ ...editingItem, saleEnd: e.target.value })}
+                      className="w-full bg-[#2C1B17] border border-stone-700 rounded-xl p-2 text-xs text-white"
+                    />
+                  </div>
                 </div>
               </div>
 

@@ -89,9 +89,42 @@ export default function ReportsTab() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Peak selling hours */}
+            <div className="bg-[#2C1B17] rounded-2xl border border-stone-800 p-5">
+              <h3 className="text-sm font-bold text-amber-200 uppercase tracking-wider mb-1">⏰ Peak Selling Hours (Today)</h3>
+              {data.peakHour ? (
+                <>
+                  <p className="text-[11px] text-emerald-400 font-bold mb-3">
+                    🔥 Busiest: {data.peakHour.hour}:00 – {data.peakHour.hour + 1}:00 ({data.peakHour.orders} orders, {data.peakHour.revenue.toLocaleString()} ETB)
+                  </p>
+                  <div className="space-y-2">
+                    {(data.hourlySales || [])
+                      .sort((a, b) => a.hour - b.hour)
+                      .map((h) => {
+                        const max = Math.max(...(data.hourlySales || [{ revenue: 1 }]).map((x) => x.revenue), 1);
+                        return (
+                          <div key={h.hour} className="flex items-center gap-2 text-[11px]">
+                            <span className="w-14 font-bold text-stone-400">{h.hour}:00</span>
+                            <div className="flex-1 h-3 bg-black/40 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${h.hour === data.peakHour?.hour ? "bg-gradient-to-r from-rose-500 to-[#C9A227]" : "bg-[#C9A227]/60"}`}
+                                style={{ width: `${(h.revenue / max) * 100}%` }}
+                              />
+                            </div>
+                            <span className="w-16 text-right font-bold text-[#C9A227]">{h.orders} ord</span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-stone-500">No sales yet today — peaks will appear once the first bills close.</p>
+              )}
+            </div>
+
             {/* Popular items */}
             <div className="bg-[#2C1B17] rounded-2xl border border-stone-800 p-5">
-              <h3 className="text-sm font-bold text-amber-200 uppercase tracking-wider mb-4">Most Popular Items (Today)</h3>
+              <h3 className="text-sm font-bold text-amber-200 uppercase tracking-wider mb-4">🏆 Highest-Selling Foods (Today)</h3>
               {data.popularItems.length === 0 ? (
                 <p className="text-xs text-stone-500">No sales yet today.</p>
               ) : (

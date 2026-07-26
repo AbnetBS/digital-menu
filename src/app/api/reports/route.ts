@@ -50,6 +50,22 @@ export async function GET() {
     const todayOrders = todayTickets.length;
     const averageOrderValue = todayOrders > 0 ? Math.round(todayRevenue / todayOrders) : 0;
 
+    // Peak selling hours — orders grouped by hour of the day (today)
+    const hourAgg: Array<{ hour: number; orders: number; revenue: number }> = Array.from({ length: 24 }, (_, h) => ({
+      hour: h,
+      orders: 0,
+      revenue: 0,
+    }));
+    for (const t of todayTickets) {
+      const d = new Date(ticketDate(t) as Date);
+      const h = d.getHours();
+      hourAgg[h].orders += 1;
+      hourAgg[h].revenue += t.totalAmount || 0;
+    }
+    const hourlySales = hourAgg.filter((h) => h.orders > 0);
+    const peakHour =
+      hourlySales.length > 0 ? hourlySales.reduce((a, b) => (b.revenue > a.revenue ? b : a), hourlySales[0]) : null;
+
     // Popular items (from today's revenue tickets, non-removed)
     const todayTicketIds = new Set(todayTickets.map((t) => t.id));
     const itemAgg = new Map<string, { quantity: number; revenue: number }>();
@@ -133,6 +149,8 @@ export async function GET() {
       paymentStats,
       receipts,
       orderHistory,
+      hourlySales,
+      peakHour,
     });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });

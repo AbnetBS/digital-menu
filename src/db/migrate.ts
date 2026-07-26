@@ -178,6 +178,19 @@ const RMS_CREATES: Array<[string, string]> = [
       created_at timestamp DEFAULT now()
     )`,
   ],
+  [
+    "announcements",
+    `CREATE TABLE IF NOT EXISTS announcements (
+      id serial PRIMARY KEY,
+      title text DEFAULT 'Announcement',
+      description text DEFAULT '',
+      image_url text,
+      start_date text,
+      end_date text,
+      priority integer DEFAULT 0,
+      created_at timestamp DEFAULT now()
+    )`,
+  ],
 ];
 
 const RMS_COLUMNS: Record<string, Record<string, ColSpec>> = {
@@ -230,7 +243,7 @@ const TABLE_COLUMNS: Record<string, Record<string, ColSpec>> = {
     notes: { type: "text" },
     created_at: { type: "timestamp", def: "now()", dropNotNull: true },
   },
-  menu_items: {
+    menu_items: {
     name: { type: "text", def: "'Menu Item'" },
     category: { type: "text", def: "'signature-coffee'" },
     price: { type: "integer", def: "0", castText: true },
@@ -241,7 +254,19 @@ const TABLE_COLUMNS: Record<string, Record<string, ColSpec>> = {
     dietary_tags: { type: "text" },
     prep_time: { type: "text", def: "'10-15 min'" },
     badge: { type: "text" },
+    sale_price: { type: "integer", castText: true },
+    sale_start: { type: "text" },
+    sale_end: { type: "text" },
     sort_order: { type: "integer", def: "0", castText: true },
+  },
+  announcements: {
+    title: { type: "text", def: "'Announcement'" },
+    description: { type: "text", def: "''" },
+    image_url: { type: "text" },
+    start_date: { type: "text" },
+    end_date: { type: "text" },
+    priority: { type: "integer", def: "0", castText: true },
+    created_at: { type: "timestamp", def: "now()", dropNotNull: true },
   },
   reservations: {
     reservation_number: { type: "text", def: "'FANA-RES-000000'" },
@@ -334,6 +359,7 @@ export async function ensureTablesExist() {
     "cafe_tables",
     "tickets",
     "ticket_items",
+    "announcements",
   ];
   for (const t of serialTables) {
     await run(`CREATE SEQUENCE IF NOT EXISTS ${t}_id_seq`);

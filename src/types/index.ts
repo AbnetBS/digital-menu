@@ -10,7 +10,22 @@ export interface MenuItem {
   dietaryTags?: string | null;
   prepTime?: string | null;
   badge?: string | null;
+  // Automatic date-ranged sale pricing
+  salePrice?: number | null;
+  saleStart?: string | null;
+  saleEnd?: string | null;
   sortOrder?: number;
+}
+
+export interface Announcement {
+  id: number;
+  title: string;
+  description: string;
+  imageUrl?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  priority?: number;
+  createdAt?: string;
 }
 
 export interface Category {
@@ -133,4 +148,6 @@ export interface ReportData {
   categorySales: Array<{ category: string; revenue: number }>;
   paymentStats: Array<{ method: string; count: number; revenue: number }>;
   receipts: Array<{ id: number; tableName: string; method: string; receiptImage: string; totalAmount: number; closedAt?: string | null }>;
+  hourlySales?: Array<{ hour: number; orders: number; revenue: number }>;
+  peakHour?: { hour: number; orders: number; revenue: number } | null;
 }

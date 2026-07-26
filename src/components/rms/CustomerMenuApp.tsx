@@ -4,9 +4,11 @@ import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Coffee, Plus, Minus, Search, Send, CheckCircle2, Clock, X, Phone, Utensils, Loader2, QrCode,
+  ChevronLeft, ChevronRight, MapPin, Star, MessageSquare, Globe, Camera,
 } from "lucide-react";
-import { MenuItem, Category, CafeTable, SiteSettings } from "@/types";
+import { MenuItem, Category, CafeTable, SiteSettings, Announcement, GalleryItem, Review } from "@/types";
 import { DEFAULT_SETTINGS, DEFAULT_CATEGORIES, DEFAULT_MENU_ITEMS } from "@/lib/initial-data";
+import { effectivePrice } from "@/lib/price";
 
 interface CartEntry {
   menuItemId: number;
@@ -35,17 +37,31 @@ export default function CustomerMenuApp() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
 
+  // Daily Board + bottom content
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [slideIdx, setSlideIdx] = useState(0);
+  const [galleryPhotos, setGalleryPhotos] = useState<GalleryItem[]>([]);
+  const [approvedReviews, setApprovedReviews] = useState<Review[]>([]);
+  const [revName, setRevName] = useState("");
+  const [revRating, setRevRating] = useState(5);
+  const [revText, setRevText] = useState("");
+  const [revSending, setRevSending] = useState(false);
+  const [revMsg, setRevMsg] = useState("");
+
   const logoUrl = String(settings.logo_url || "/logo.png");
 
   useEffect(() => {
     (async () => {
       try {
         await fetch("/api/seed");
-        const [s, c, m, t] = await Promise.all([
+        const [s, c, m, t, anns, gal, revs] = await Promise.all([
           fetch("/api/settings"),
           fetch("/api/categories"),
           fetch("/api/menu"),
           fetch("/api/tables"),
+          fetch("/api/announcements?active=1"),
+          fetch("/api/gallery"),
+          fetch("/api/reviews"),
         ]);
         if (s.ok) setSettings(await s.json());
         if (c.ok) setCategories(await c.json());
@@ -55,9 +71,45 @@ export default function CustomerMenuApp() {
           const found = tables.find((x) => x.id === tableId);
           if (found) setTableName(found.name);
         }
+        if (anns.ok) setAnnouncements(await anns.json());
+        if (gal.ok) setGalleryPhotos((await gal.json()).slice(0, 8));
+        if (revs.ok) {
+          const all: Review[] = await revs.json();
+          setApprovedReviews(all.filter((r) => r.isApproved).slice(0, 5));
+        }
       } catch {}
     })();
   }, [tableId]);
+
+  // Daily Board auto-slide when 2+ announcements (seconds interval), swipeable with arrows
+  useEffect(() => {
+    if (announcements.length < 2) return;
+    const t = setInterval(() => setSlideIdx((i) => (i + 1) % announcements.length), 4500);
+    return () => clearInterval(t);
+  }, [announcements.length]);
+
+  useEffect(() => {
+    setSlideIdx(0);
+  }, [announcements.length]);
+
+  const submitReview = async () => {
+    if (!revName.trim() || !revText.trim()) {
+      setRevMsg("Please add your name and a short comment.");
+      return;
+    }
+    setRevSending(true);
+    const r = await fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ customerName: revName.trim(), rating: revRating, reviewText: revText.trim() }),
+    });
+    setRevSending(false);
+    if (r.ok) {
+      setRevName("");
+      setRevText("");
+      setRevMsg("✓ Thank you! Your review awaits admin approval before it appears.");
+    } else setRevMsg("Couldn't submit right now. Please tell a waiter.");
+  };
 
   const filteredMenu = useMemo(
     () =>
@@ -70,13 +122,15 @@ export default function CustomerMenuApp() {
   );
 
   // Unified quantity control: qty 0 = remove from cart (fixes "accidental Add" confusion)
+  // Applies the auto-scheduled SALE price when active for today.
   const setQty = (m: MenuItem, qty: number) => {
     if (!m.isAvailable) return;
+    const { price: unitPrice } = effectivePrice(m);
     setCart((prev) => {
       const exists = prev.find((c) => c.menuItemId === m.id);
       if (qty <= 0) return prev.filter((c) => c.menuItemId !== m.id);
-      if (exists) return prev.map((c) => (c.menuItemId === m.id ? { ...c, quantity: qty } : c));
-      return [...prev, { menuItemId: m.id, name: m.name, category: m.category, price: m.price, quantity: qty, notes: "" }];
+      if (exists) return prev.map((c) => (c.menuItemId === m.id ? { ...c, quantity: qty, price: unitPrice } : c));
+      return [...prev, { menuItemId: m.id, name: m.name, category: m.category, price: unitPrice, quantity: qty, notes: "" }];
     });
   };
 
@@ -258,6 +312,58 @@ export default function CustomerMenuApp() {
         Pick your items, add notes, then <strong>Submit Order</strong> — your waiter will confirm at your table.
       </div>
 
+      {/* ── 📢 DAILY BOARD — rotating announcements (auto-slide every few seconds when 2+) ── */}
+      {announcements.length > 0 && (
+        <div className="mx-4 mt-3 max-w-lg lg:mx-auto">
+          <div className="relative bg-gradient-to-r from-[#C9A227] via-[#E2B93B] to-[#C9A227] rounded-2xl shadow-xl overflow-hidden">
+            {/* slide content */}
+            <div className="p-4 min-h-[84px]">
+              {announcements[slideIdx]?.imageUrl && (
+                <img src={announcements[slideIdx].imageUrl!} alt="" className="w-full h-28 object-cover rounded-xl mb-2 border border-white/40" />
+              )}
+              <p className="font-serif font-black text-[#2C1B17] text-base leading-tight">
+                {announcements[slideIdx]?.title}
+              </p>
+              {announcements[slideIdx]?.description && (
+                <p className="text-[#3D2314] text-xs font-semibold mt-0.5 leading-snug">
+                  {announcements[slideIdx]?.description}
+                </p>
+              )}
+            </div>
+
+            {/* controls — only when sliding is possible */}
+            {announcements.length > 1 && (
+              <>
+                <button
+                  onClick={() => setSlideIdx((slideIdx - 1 + announcements.length) % announcements.length)}
+                  className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/25 text-white flex items-center justify-center"
+                  aria-label="Previous"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setSlideIdx((slideIdx + 1) % announcements.length)}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/25 text-white flex items-center justify-center"
+                  aria-label="Next"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {announcements.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setSlideIdx(i)}
+                      className={`w-1.5 h-1.5 rounded-full transition ${i === slideIdx ? "bg-[#2C1B17] w-3" : "bg-white/70"}`}
+                      aria-label={`Slide ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* search + categories */}
       <div className="sticky top-[61px] z-30 bg-[#FAF6F0] px-4 pt-3 pb-2 space-y-2 max-w-lg mx-auto">
         <div className="relative">
@@ -312,12 +418,22 @@ export default function CustomerMenuApp() {
                   <p className="text-xs font-bold text-[#2C1B17] leading-tight line-clamp-2 min-h-[2rem] hover:text-[#C9A227] transition-colors">{m.name}</p>
                 </button>
                 <p className="text-[10px] text-stone-500 line-clamp-2">{m.description}</p>
-                <div className="flex items-center justify-between pt-1">
-                  <span className="font-extrabold text-[#4E342E] text-sm">{m.price} ETB</span>
+                <div className="flex items-center justify-between pt-1 gap-1">
+                  {(() => {
+                    const ep = effectivePrice(m);
+                    return ep.onSale ? (
+                      <span className="flex flex-col leading-none">
+                        <span className="text-[10px] line-through text-stone-400 font-semibold">{m.price} ETB</span>
+                        <span className="font-extrabold text-emerald-700 text-sm">{ep.price} ETB <span className="text-[9px] bg-emerald-600 text-white px-1.5 py-0.5 rounded font-extrabold">SALE</span></span>
+                      </span>
+                    ) : (
+                      <span className="font-extrabold text-[#4E342E] text-sm">{m.price} ETB</span>
+                    );
+                  })()}
                   {out ? (
                     <span className="text-[10px] text-stone-400 font-bold">—</span>
                   ) : qty > 0 ? (
-                    // Inline −/+ stepper — customer can decrease or remove
+                  // Inline −/+ stepper — customer can decrease or remove
                     <div className="flex items-center gap-1.5 bg-stone-100 rounded-lg p-1">
                       <button
                         onClick={() => setQty(m, qty - 1)}
@@ -435,6 +551,154 @@ export default function CustomerMenuApp() {
           </div>
         </div>
       )}
+
+      {/* ═══════════ BELOW-MENU CONTENT (customers scroll while waiting) ═══════════ */}
+      <div className="max-w-lg mx-auto px-4 mt-10 space-y-10">
+
+        {/* 3. ABOUT US — short, 2–3 sentences */}
+        <section className="bg-white rounded-2xl p-5 border border-[#C9A227]/25 shadow-sm">
+          <h3 className="font-serif font-bold text-lg text-[#2C1B17] flex items-center gap-2">☕ About Us</h3>
+          <p className="text-sm text-stone-600 leading-relaxed mt-2">
+            {settings.about_description?.split(".").slice(0, 2).join(".") ||
+              "Since 2018, FanaQueen has served premium Ethiopian coffee, fresh pastries, and traditional meals in a comfortable atmosphere. Made with love in Addis Ababa."}
+          </p>
+        </section>
+
+        {/* 4. GALLERY — photos to browse while waiting */}
+        {galleryPhotos.length > 0 && (
+          <section>
+            <h3 className="font-serif font-bold text-lg text-[#2C1B17] mb-3 flex items-center gap-2">
+              <Camera className="w-5 h-5 text-[#C9A227]" /> Gallery
+            </h3>
+            <div className="grid grid-cols-3 gap-2">
+              {galleryPhotos.slice(0, 6).map((g) => (
+                <img key={g.id} src={g.imageUrl} alt={g.title} className="w-full h-24 object-cover rounded-xl shadow-sm" loading="lazy" />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 5. SERVICES — very short */}
+        <section className="bg-[#2C1B17] rounded-2xl p-5">
+          <h3 className="font-serif font-bold text-lg text-amber-100 mb-3">✨ What We Serve</h3>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {["☕ Premium Coffee", "🍽 Ethiopian Meals", "🥐 Fresh Pastries", "🥤 Fresh Juices"].map((s) => (
+              <div key={s} className="bg-[#3D2314] text-amber-100 font-bold px-3 py-2.5 rounded-xl text-center border border-[#C9A227]/20">
+                {s}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 6. FIND US — map, address, phone, hours (customers save/share) */}
+        <section className="bg-white rounded-2xl p-5 border border-[#C9A227]/25 shadow-sm space-y-3">
+          <h3 className="font-serif font-bold text-lg text-[#2C1B17] flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-[#C9A227]" /> Find Us
+          </h3>
+          <iframe
+            title="Fana Location"
+            src="https://maps.google.com/maps?q=9.0148457,38.7875868&z=17&output=embed"
+            className="w-full h-44 rounded-xl border border-stone-200"
+            loading="lazy"
+          />
+          <div className="text-xs text-stone-600 space-y-1.5">
+            <p>📍 {settings.address || "Golagul Building, 22 Square, Djibouti Street, Addis Ababa"}</p>
+            <p>📞 <a href={`tel:${String(settings.phone || "0911065022").replace(/\s+/g, "")}`} className="font-extrabold text-[#4E342E]">{settings.phone || "0911 065 022"}</a></p>
+            <p>🕒 {settings.opening_hours || "Open Daily Until 8:30 PM"}</p>
+            <p className="text-stone-400">Plus Code: {settings.plus_code || "2Q7Q+W2 Addis Ababa"}</p>
+          </div>
+          <a
+            href="https://www.google.com/maps/place/Fana+cafe/@9.0148457,38.7875868,17z"
+            target="_blank"
+            rel="noreferrer"
+            className="block text-center bg-[#4E342E] text-amber-200 font-bold text-xs py-2.5 rounded-xl"
+          >
+            Open in Google Maps →
+          </a>
+        </section>
+
+        {/* 7. REVIEWS — 3–5 recent + leave a review */}
+        <section className="space-y-3">
+          <h3 className="font-serif font-bold text-lg text-[#2C1B17] flex items-center gap-2">
+            <Star className="w-5 h-5 text-[#C9A227] fill-[#C9A227]" /> What Guests Say
+          </h3>
+          {approvedReviews.map((r) => (
+            <div key={r.id} className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold text-[#2C1B17]">{r.customerName}</p>
+                <span className="text-[#C9A227] text-xs font-bold">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
+              </div>
+              <p className="text-xs text-stone-600 mt-1.5 leading-relaxed italic">"{r.reviewText}"</p>
+            </div>
+          ))}
+
+          {/* leave a review — inline quick form */}
+          <div className="bg-[#2C1B17] rounded-2xl p-5 space-y-3">
+            <p className="font-bold text-sm text-amber-100 flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-[#C9A227]" /> Leave a Review
+            </p>
+            <input
+              value={revName}
+              onChange={(e) => setRevName(e.target.value)}
+              placeholder="Your name"
+              className="w-full bg-[#3D2314] border border-stone-700 rounded-xl px-3 py-2.5 text-xs text-white"
+            />
+            <div className="flex gap-1.5">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setRevRating(n)}
+                  className={`text-xl transition ${n <= revRating ? "text-[#C9A227]" : "text-stone-600"}`}
+                  aria-label={`${n} stars`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+            <textarea
+              rows={2}
+              value={revText}
+              onChange={(e) => setRevText(e.target.value)}
+              placeholder="How was your coffee today?"
+              className="w-full bg-[#3D2314] border border-stone-700 rounded-xl px-3 py-2.5 text-xs text-white"
+            />
+            {revMsg && <p className="text-[11px] font-bold text-amber-300">{revMsg}</p>}
+            <button
+              onClick={submitReview}
+              disabled={revSending}
+              className="w-full bg-[#C9A227] text-[#2C1B17] font-black text-xs uppercase py-3 rounded-xl disabled:opacity-50"
+            >
+              {revSending ? "Sending..." : "Submit Review"}
+            </button>
+            <p className="text-[10px] text-stone-500 text-center">Reviews appear after owner approval.</p>
+          </div>
+        </section>
+      </div>
+
+      {/* 8. FOOTER — phone + socials + copyright */}
+      <footer className="bg-[#1C120F] text-stone-400 mt-10 pb-24 pt-8">
+        <div className="max-w-lg mx-auto px-4 text-center space-y-4">
+          <img src={logoUrl} alt="FanaQueen" className="w-12 h-12 rounded-full object-contain bg-white mx-auto border-2 border-[#C9A227] p-0.5" />
+          <p className="font-serif font-bold text-amber-100 text-sm">{settings.cafe_name || "FanaQueen Cafe & Restaurant"}</p>
+          <a href={`tel:${String(settings.phone || "0911065022").replace(/\s+/g, "")}`} className="inline-flex items-center gap-2 text-[#C9A227] font-bold text-sm">
+            <Phone className="w-4 h-4" /> {settings.phone || "0911 065 022"}
+          </a>
+          <div className="flex items-center justify-center gap-4 pt-1">
+            <a href="https://facebook.com" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-xs font-bold bg-white/10 px-3.5 py-2 rounded-full hover:bg-white/20">
+              <Globe className="w-3.5 h-3.5 text-[#C9A227]" /> Facebook
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-xs font-bold bg-white/10 px-3.5 py-2 rounded-full hover:bg-white/20">
+              <Camera className="w-3.5 h-3.5 text-[#C9A227]" /> Instagram
+            </a>
+            <a href="https://t.me" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-xs font-bold bg-white/10 px-3.5 py-2 rounded-full hover:bg-white/20">
+              <Send className="w-3.5 h-3.5 text-[#C9A227]" /> Telegram
+            </a>
+          </div>
+          <p className="text-[10px] text-stone-600 pt-2">
+            © {new Date().getFullYear()} {settings.cafe_name || "FanaQueen Cafe"} • {settings.plus_code || "2Q7Q+W2 Addis Ababa"} • Powered by your digital menu
+          </p>
+        </div>
+      </footer>
 
       {/* cart bar */}
       {cart.length > 0 && (

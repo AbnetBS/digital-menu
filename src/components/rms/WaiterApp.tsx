@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { MenuItem, Ticket, TicketItem, CafeTable } from "@/types";
 import { compressImage } from "@/lib/image-utils";
+import { effectivePrice } from "@/lib/price";
 import { unlockAudio, playDing } from "@/lib/sound";
 import { triggerDesktopNotification } from "@/lib/notifications";
 import { useRef } from "react";
@@ -191,7 +192,7 @@ export default function WaiterApp() {
       if (existing) {
         return prev.map((c) => (c.menuItemId === item.id ? { ...c, quantity: c.quantity + 1 } : c));
       }
-      return [...prev, { menuItemId: item.id, name: item.name, category: item.category, price: item.price, quantity: 1, notes: "" }];
+      return [...prev, { menuItemId: item.id, name: item.name, category: item.category, price: effectivePrice(item).price, quantity: 1, notes: "" }];
     });
   };
 
@@ -527,7 +528,7 @@ export default function WaiterApp() {
                   <img src={m.imageUrl} alt={m.name} className="w-full h-24 object-cover" />
                   <div className="p-2.5 space-y-1">
                     <p className="text-xs font-bold text-amber-100 leading-tight line-clamp-2">{m.name}</p>
-                    <p className="text-[11px] text-[#C9A227] font-extrabold">{m.price} ETB</p>
+                    <p className="text-[11px] text-[#C9A227] font-extrabold">{effectivePrice(m).onSale ? <span><span className="line-through text-stone-500 text-[10px]">{m.price} </span>{effectivePrice(m).price}</span> : m.price} ETB</p>
                     {out ? (
                       <span className="text-[10px] font-bold text-rose-400 bg-rose-900/40 px-2 py-0.5 rounded">Unavailable</span>
                     ) : (
