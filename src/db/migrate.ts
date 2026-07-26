@@ -309,7 +309,17 @@ const TABLE_COLUMNS: Record<string, Record<string, ColSpec>> = {
   },
 };
 
-export async function ensureTablesExist() {
+// Cache the schema check per server process — creating/checking tables hundreds of times
+// per minute was the #1 speed bottleneck (10s+ first loads on Vercel+Neon).
+// It only needs to run ONCE per server instance; /api/setup?force=1 re-runs it.
+const globalForMigrate = globalThis as typeof globalThis & {
+  __fanaMigrateDone?: boolean;
+};
+
+export async function ensureTablesExist(force = false) {
+  if (globalForMigrate.__fanaMigrateDone && !force) {
+    return { success: true, errors: [] as string[] };
+  }
   const errors: string[] = [];
 
   // Step 1 — create missing tables (classic + RMS)
@@ -373,6 +383,7 @@ export async function ensureTablesExist() {
     console.error("ensureTablesExist errors:", errors);
     return { success: false, errors };
   }
+  globalForMigrate.__fanaMigrateDone = true;
   return { success: true, errors: [] as string[] };
 }
 

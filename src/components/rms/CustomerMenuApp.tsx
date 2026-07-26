@@ -50,10 +50,29 @@ export default function CustomerMenuApp() {
 
   const logoUrl = String(settings.logo_url || "/logo.png");
 
+  // SPEED: show cached menu + announcements INSTANTLY on repeat visits,
+  // then refresh silently in the background (stale-while-revalidate)
+  useEffect(() => {
+    try {
+      const cached = sessionStorage.getItem("fana_menu_cache");
+      if (cached) {
+        const { t: cachedAt, data } = JSON.parse(cached);
+        if (Date.now() - cachedAt < 120_000 && data) {
+          if (data.menuItems) setMenuItems(data.menuItems);
+          if (data.categories) setCategories(data.categories);
+          if (data.announcements) setAnnouncements(data.announcements);
+          if (data.galleryPhotos) setGalleryPhotos(data.galleryPhotos);
+          if (data.approvedReviews) setApprovedReviews(data.approvedReviews);
+        }
+      }
+    } catch {}
+  }, [tableId]);
+
   useEffect(() => {
     (async () => {
       try {
-        await fetch("/api/seed");
+        // don't await the seed — routes initialize themselves; fetching immediately is faster
+        fetch("/api/seed");
         const [s, c, m, t, anns, gal, revs] = await Promise.all([
           fetch("/api/settings"),
           fetch("/api/categories"),
@@ -63,20 +82,44 @@ export default function CustomerMenuApp() {
           fetch("/api/gallery"),
           fetch("/api/reviews"),
         ]);
+        const fresh: Record<string, unknown> = {};
         if (s.ok) setSettings(await s.json());
-        if (c.ok) setCategories(await c.json());
-        if (m.ok) setMenuItems(await m.json());
+        if (c.ok) {
+          const allCats = await c.json();
+          setCategories(allCats);
+          fresh.categories = allCats;
+        }
+        if (m.ok) {
+          const allMenu = await m.json();
+          setMenuItems(allMenu);
+          fresh.menuItems = allMenu;
+        }
         if (t.ok) {
           const tables: CafeTable[] = await t.json();
           const found = tables.find((x) => x.id === tableId);
           if (found) setTableName(found.name);
         }
-        if (anns.ok) setAnnouncements(await anns.json());
-        if (gal.ok) setGalleryPhotos((await gal.json()).slice(0, 8));
+        if (anns.ok) {
+          const a = await anns.json();
+          setAnnouncements(a);
+          fresh.announcements = a;
+        }
+        if (gal.ok) {
+          const p = (await gal.json()).slice(0, 8);
+          setGalleryPhotos(p);
+          fresh.galleryPhotos = p;
+        }
         if (revs.ok) {
           const all: Review[] = await revs.json();
-          setApprovedReviews(all.filter((r) => r.isApproved).slice(0, 5));
+          const ap = all.filter((r) => r.isApproved).slice(0, 5);
+          setApprovedReviews(ap);
+          fresh.approvedReviews = ap;
         }
+
+        // update instant-cache for the next visit
+        try {
+          sessionStorage.setItem("fana_menu_cache", JSON.stringify({ t: Date.now(), data: fresh }));
+        } catch {}
       } catch {}
     })();
   }, [tableId]);
@@ -403,7 +446,7 @@ export default function CustomerMenuApp() {
                 className="relative w-full text-left cursor-pointer"
                 title="Tap for full details"
               >
-                <img src={m.imageUrl} alt={m.name} className="w-full h-28 object-cover" />
+                <img src={m.imageUrl} alt={m.name} loading="lazy" decoding="async" className="w-full h-28 object-cover" />
                 <span className="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[9px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm">
                   🔍 Details
                 </span>

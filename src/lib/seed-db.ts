@@ -10,7 +10,13 @@ import {
   DEFAULT_STAFF,
 } from "@/lib/initial-data";
 
-export async function ensureDbSeeded() {
+const globalForSeed = globalThis as typeof globalThis & {
+  __fanaSeedDone?: boolean;
+};
+
+export async function ensureDbSeeded(force = false) {
+  // Seed only once per server process (second big speed win)
+  if (globalForSeed.__fanaSeedDone && !force) return { success: true };
   try {
     const existingSettings = await db.select().from(siteSettings);
     if (existingSettings.length === 0) {
@@ -89,6 +95,7 @@ export async function ensureDbSeeded() {
       await db.insert(cafeTables).values(DEFAULT_TABLES);
     }
 
+    globalForSeed.__fanaSeedDone = true;
     return { success: true };
   } catch (error) {
     console.error("Db Seed Error:", error);

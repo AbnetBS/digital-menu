@@ -27,7 +27,8 @@ export default function HomePage() {
 
   const loadSiteData = async () => {
     try {
-      await fetch("/api/seed");
+      // don't await the seed — it runs lazily in the background
+      fetch("/api/seed");
 
       const settingsRes = await fetch("/api/settings");
       if (settingsRes.ok) {
