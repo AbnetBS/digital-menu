@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Ticket, TicketItem, CafeTable, StaffUser } from "@/types";
 import { triggerDesktopNotification } from "@/lib/notifications";
+import { unlockAudio, playDing } from "@/lib/sound";
 
 interface StaffLite {
   id: number;
@@ -27,7 +28,13 @@ export default function CashierDashboard() {
   const [receiptModal, setReceiptModal] = useState<string | null>(null);
   const prevCountRef = useRef(0);
 
+  // ── RING BELL + DESKTOP POPUP ALERT SYSTEM ──
+  const [alertsOn, setAlertsOn] = useState(false);
+  const seenEventsRef = useRef<Set<string>>(new Set());
+  const initializedRef = useRef(false);
+
   useEffect(() => {
+    setAlertsOn(localStorage.getItem("fana_alerts") === "1");
     const saved = sessionStorage.getItem("fana_cashier");
     if (saved) setStaffName(JSON.parse(saved).name);
     fetch("/api/staff?public=1")
@@ -35,6 +42,29 @@ export default function CashierDashboard() {
       .then((d) => setStaffList(d.filter((s: StaffLite) => s.role === "cashier")))
       .catch(() => {});
   }, []);
+
+  // One-time unlock: browsers need a user click before sound + desktop popups can play
+  const enableAlerts = async () => {
+    unlockAudio();
+    if ("Notification" in window && Notification.permission === "default") {
+      await Notification.requestPermission();
+    }
+    localStorage.setItem("fana_alerts", "1");
+    setAlertsOn(true);
+    playDing();
+    triggerDesktopNotification({ title: "Fana Cafe • Cashier", message: "🔔 Ring bell + desktop alerts are now ON for this device!" });
+  };
+
+  const eventMessage = (t: Ticket): string | null => {
+    const m: Record<string, string> = {
+      pending_waiter: `🍽 New QR order — ${t.tableName} • ${t.totalAmount} ETB • needs confirmation`,
+      confirmed: `✅ Order confirmed — ${t.tableName} • ${t.totalAmount} ETB`,
+      preparing: `👨‍🍳 Preparing — ${t.tableName}`,
+      ready_for_payment: `💳 Payment requested — ${t.tableName} • ${t.totalAmount} ETB`,
+      completed: `✓ Payment completed — ${t.tableName} • verify & mark Paid`,
+    };
+    return m[t.status] || null;
+  };
 
   const loadAll = async () => {
     const [tRes, tkRes] = await Promise.all([fetch("/api/tables"), fetch("/api/tickets?all=1")]);
@@ -46,14 +76,25 @@ export default function CashierDashboard() {
       const active = all.filter((t) => t.status !== "paid" && t.status !== "cancelled");
       const done = all.filter((t) => t.status === "paid").slice(0, 12);
 
-      // Desktop notification when active ticket count grows (new order or payment request)
-      if (active.length > prevCountRef.current) {
+      // ── EVENT DETECTION: any order action (QR order, confirmation, payment request, payment done)
+      const newEvents: Ticket[] = [];
+      for (const t of active) {
+        const key = `${t.id}:${t.status}`;
+        if (!seenEventsRef.current.has(key)) {
+          seenEventsRef.current.add(key);
+          newEvents.push(t);
+        }
+      }
+
+      if (initializedRef.current && alertsOn && newEvents.length > 0) {
+        playDing();
+        const first = newEvents[0];
         triggerDesktopNotification({
-          title: "Fana Cafe • Cashier",
-          message: "New order or payment request — check the cashier screen!",
+          title: "Fana Cafe • Cashier Alert",
+          message: eventMessage(first) || `${first.tableName} updated`,
         });
       }
-      prevCountRef.current = active.length;
+      initializedRef.current = true;
 
       setTickets(active);
       setHistory(done);
@@ -195,6 +236,19 @@ export default function CashierDashboard() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {/* RING BELL enable button — click once on each cashier device */}
+          <button
+            onClick={enableAlerts}
+            className={`text-[10px] font-black px-3 py-1.5 rounded-full flex items-center gap-1.5 transition ${
+              alertsOn
+                ? "bg-emerald-600 text-white"
+                : "bg-[#C9A227] text-[#2C1B17] animate-pulse"
+            }`}
+            title={alertsOn ? "Ring bell + desktop alerts enabled" : "Click once to enable ring bell & desktop alerts"}
+          >
+            <BellRing className="w-3.5 h-3.5" />
+            {alertsOn ? "ALERTS ON" : "🔔 ENABLE ALERTS"}
+          </button>
           {pendingCount > 0 && (
             <span className="bg-violet-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full animate-pulse flex items-center gap-1">
               <BellRing className="w-3 h-3" /> {pendingCount} TO CONFIRM

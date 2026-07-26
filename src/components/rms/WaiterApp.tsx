@@ -3,10 +3,13 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   Coffee, Plus, Minus, Send, ArrowLeft, RefreshCw, CreditCard, Banknote,
-  Smartphone, Camera, CheckCircle2, ClipboardList, Search, X, Users, LogOut,
+  Smartphone, Camera, CheckCircle2, ClipboardList, Search, X, Users, LogOut, BellRing,
 } from "lucide-react";
 import { MenuItem, Ticket, TicketItem, CafeTable } from "@/types";
 import { compressImage } from "@/lib/image-utils";
+import { unlockAudio, playDing } from "@/lib/sound";
+import { triggerDesktopNotification } from "@/lib/notifications";
+import { useRef } from "react";
 
 interface StaffLite {
   id: number;
@@ -61,7 +64,13 @@ export default function WaiterApp() {
     { slug: "pastries", name: "Pastries" },
   ];
 
+  // Ring bell alerts (new QR orders)
+  const [alertsOn, setAlertsOn] = useState(false);
+  const seenPendingRef = useRef<Set<number>>(new Set());
+  const alertsInitRef = useRef(false);
+
   useEffect(() => {
+    setAlertsOn(localStorage.getItem("fana_alerts_waiter") === "1");
     const saved = sessionStorage.getItem("fana_waiter");
     if (saved) {
       const s = JSON.parse(saved);
@@ -92,9 +101,40 @@ export default function WaiterApp() {
     setTimeout(() => setToast(""), 3500);
   };
 
+  const enableAlerts = async () => {
+    unlockAudio();
+    if ("Notification" in window && Notification.permission === "default") {
+      await Notification.requestPermission();
+    }
+    localStorage.setItem("fana_alerts_waiter", "1");
+    setAlertsOn(true);
+    playDing();
+    showToast("🔔 Ring bell alerts ON");
+  };
+
   const loadTables = async () => {
     const r = await fetch("/api/tables");
     if (r.ok) setTables(await r.json());
+
+    // Ring bell when a NEW customer QR order (pending_waiter) appears on any table
+    const tkRes = await fetch("/api/tickets?active=1");
+    if (tkRes.ok) {
+      const all: Ticket[] = await tkRes.json();
+      const pending = all.filter((t) => t.status === "pending_waiter");
+      const fresh = pending.filter((t) => !seenPendingRef.current.has(t.id));
+      fresh.forEach((t) => seenPendingRef.current.add(t.id));
+
+      if (alertsInitRef.current && alertsOn && fresh.length > 0) {
+        playDing(3);
+        const t0 = fresh[0];
+        triggerDesktopNotification({
+          title: "Fana Cafe • Waiter Alert",
+          message: `🍽 New order request — ${t0.tableName} • ${t0.totalAmount} ETB • go confirm!`,
+        });
+        showToast(`🔔 New order request: ${t0.tableName}`);
+      }
+      alertsInitRef.current = true;
+    }
   };
 
   const loadAll = async () => {
@@ -366,6 +406,13 @@ export default function WaiterApp() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={enableAlerts}
+            className={`p-2 rounded-xl transition ${alertsOn ? "bg-emerald-600 text-white" : "bg-[#C9A227] text-[#2C1B17] animate-pulse"}`}
+            title={alertsOn ? "Ring bell alerts ON" : "Enable ring bell alerts"}
+          >
+            <BellRing className="w-4 h-4" />
+          </button>
           <button onClick={loadAll} className="p-2 rounded-xl bg-white/10 text-amber-200" title="Refresh">
             <RefreshCw className="w-4 h-4" />
           </button>
