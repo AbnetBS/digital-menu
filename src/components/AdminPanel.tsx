@@ -67,7 +67,7 @@ export default function AdminPanel({
 
   const toBase64 = async (file: File, cb: (data: string) => void) => {
     try {
-      // Always compress before saving to the database (~95% storage saved)
+      // Compress on device before saving to Neon (~70KB per photo, forever visible)
       const small = await compressImage(file, 1000, 0.72);
       cb(small);
     } catch {
@@ -277,7 +277,6 @@ export default function AdminPanel({
                 <span>{settingsMsg}</span>
               </div>
             )}
-
             {/* Receipt photo switch — controls waiter card/online payment flow */}
             <div className="bg-[#3D2314] p-5 rounded-2xl border border-[#C9A227]/30 flex items-center justify-between gap-4">
               <div className="flex-1">

@@ -83,10 +83,7 @@ export default function WaiterApp() {
       .then((d) => setStaffList(d.filter((s: StaffLite) => s.role === "waiter")))
       .catch(() => {});
     // Read owner switch: require receipt photo on card/online payments or not
-    fetch("/api/settings")
-      .then((r) => r.json())
-      .then((s) => setReceiptEnabled(String(s.receipt_enabled ?? "true") !== "false"))
-      .catch(() => {});
+    fetch("/api/settings").then((r) => r.json()).then((s) => setReceiptEnabled(String(s.receipt_enabled ?? "true") !== "false")).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -704,7 +701,7 @@ export default function WaiterApp() {
                     const f = e.target.files?.[0];
                     if (!f) return;
                     try {
-                      // Compress on device: ~4MB camera photo → ~80KB (saves 95% of DB storage)
+                      // Compress on device: ~4MB camera photo → ~70KB, stored safely in Neon
                       const small = await compressImage(f, 800, 0.65);
                       setReceiptImage(small);
                     } catch {
