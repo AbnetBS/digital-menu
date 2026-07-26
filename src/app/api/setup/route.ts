@@ -19,10 +19,11 @@ export async function GET() {
     const { siteSettings } = await import("@/db/schema");
     const { db } = await import("@/db");
     const { eq } = await import("drizzle-orm");
+    const { fixBrandText } = await import("@/lib/brand");
     const rows = await db.select().from(siteSettings);
     for (const row of rows) {
-      if (row.value && row.value.includes("FanaQueen")) {
-        const fixed = row.value.replace(/FanaQueen/g, "Fana Cafe");
+      const fixed = fixBrandText(row.value);
+      if (fixed !== row.value && (row.value.includes("FanaQueen") || /Cafe\s+Cafe/i.test(row.value))) {
         await db.update(siteSettings).set({ value: fixed }).where(eq(siteSettings.key, row.key));
         normalized++;
       }

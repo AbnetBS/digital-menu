@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Coffee, Lock, Menu, X, Phone, ShieldCheck, LayoutDashboard, ClipboardList, Monitor } from "lucide-react";
 import { SiteSettings } from "@/types";
+import { fixBrandText } from "@/lib/brand";
 import Link from "next/link";
 
 interface NavbarProps {
@@ -16,7 +17,7 @@ export default function Navbar({ settings, onOpenAdmin, isAdminLoggedIn }: Navba
   const [showAnnouncement, setShowAnnouncement] = useState(true);
 
   const phone = settings.phone || "0911 065 022";
-  const cafeName = String(settings.cafe_name || "FANA CAFE").replace(/FanaQueen/g, "Fana Cafe");
+  const cafeName = fixBrandText(settings.cafe_name || "FANA CAFE");
   const announcement = settings.announcement || "☕ Welcome to Fana Cafe!";
 
   const navLinks = [

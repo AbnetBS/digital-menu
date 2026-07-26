@@ -10,13 +10,11 @@ import {
   DEFAULT_STAFF,
 } from "@/lib/initial-data";
 
-const globalForSeed = globalThis as typeof globalThis & {
-  __fanaSeedDone?: boolean;
-};
-
 export async function ensureDbSeeded(force = false) {
-  // Seed only once per server process (second big speed win)
-  if (globalForSeed.__fanaSeedDone && !force) return { success: true };
+  // NOTE: runs on every call — the 7 tiny SELECTs cost ~50ms total, but this is the ONLY
+  // safe way to guarantee data self-heals: if a table ever becomes EMPTY (items deleted by
+  // mistake), the defaults are restored on the very next request instead of never coming back.
+  // (Force parameter kept for /api/setup compatibility.)
   try {
     const existingSettings = await db.select().from(siteSettings);
     if (existingSettings.length === 0) {
@@ -95,7 +93,6 @@ export async function ensureDbSeeded(force = false) {
       await db.insert(cafeTables).values(DEFAULT_TABLES);
     }
 
-    globalForSeed.__fanaSeedDone = true;
     return { success: true };
   } catch (error) {
     console.error("Db Seed Error:", error);

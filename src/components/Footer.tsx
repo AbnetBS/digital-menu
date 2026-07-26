@@ -2,6 +2,7 @@
 
 import { Coffee, MapPin, Phone, Clock, Lock, Heart, ShieldCheck } from "lucide-react";
 import { SiteSettings } from "@/types";
+import { fixBrandText } from "@/lib/brand";
 
 interface FooterProps {
   settings: SiteSettings;
@@ -10,7 +11,7 @@ interface FooterProps {
 }
 
 export default function Footer({ settings, onOpenAdmin, isAdminLoggedIn }: FooterProps) {
-  const cafeName = String(settings.cafe_name || "FANA CAFE").replace(/FanaQueen/g, "Fana Cafe");
+  const cafeName = fixBrandText(settings.cafe_name || "FANA CAFE");
   const tagline = settings.tagline || "Where Great Coffee Meets Beautiful Moments";
   const phone = settings.phone || "0911 065 022";
   const address = settings.address || "Addis Ababa, Ethiopia";

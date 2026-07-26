@@ -9,6 +9,7 @@ import {
 import { MenuItem, Category, CafeTable, SiteSettings, Announcement, GalleryItem, Review } from "@/types";
 import { DEFAULT_SETTINGS, DEFAULT_CATEGORIES, DEFAULT_MENU_ITEMS } from "@/lib/initial-data";
 import { effectivePrice } from "@/lib/price";
+import { fixBrandText } from "@/lib/brand";
 
 interface CartEntry {
   menuItemId: number;
@@ -50,7 +51,7 @@ export default function CustomerMenuApp() {
 
   const logoUrl = String(settings.logo_url || "/logo.png");
   // Brand guard: business is Fana Cafe & Restaurant — never show FanaQueen text
-  const brandName = String(settings.cafe_name || "Fana Cafe & Restaurant").replace(/FanaQueen/g, "Fana Cafe");
+  const brandName = fixBrandText(settings.cafe_name || "Fana Cafe & Restaurant");
 
   // SPEED: show cached menu + announcements INSTANTLY on repeat visits,
   // then refresh silently in the background (stale-while-revalidate)
