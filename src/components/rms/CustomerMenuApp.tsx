@@ -560,7 +560,7 @@ export default function CustomerMenuApp() {
           <h3 className="font-serif font-bold text-lg text-[#2C1B17] flex items-center gap-2">☕ About Us</h3>
           <p className="text-sm text-stone-600 leading-relaxed mt-2">
             {settings.about_description?.split(".").slice(0, 2).join(".") ||
-              "Since 2018, FanaQueen has served premium Ethiopian coffee, fresh pastries, and traditional meals in a comfortable atmosphere. Made with love in Addis Ababa."}
+              "Since 2018, Fana Cafe has served premium Ethiopian coffee, fresh pastries, and traditional meals in a comfortable atmosphere. Made with love in Addis Ababa."}
           </p>
         </section>
 
@@ -678,8 +678,8 @@ export default function CustomerMenuApp() {
       {/* 8. FOOTER — phone + socials + copyright */}
       <footer className="bg-[#1C120F] text-stone-400 mt-10 pb-24 pt-8">
         <div className="max-w-lg mx-auto px-4 text-center space-y-4">
-          <img src={logoUrl} alt="FanaQueen" className="w-12 h-12 rounded-full object-contain bg-white mx-auto border-2 border-[#C9A227] p-0.5" />
-          <p className="font-serif font-bold text-amber-100 text-sm">{settings.cafe_name || "FanaQueen Cafe & Restaurant"}</p>
+          <img src={logoUrl} alt="Fana Cafe" className="w-12 h-12 rounded-full object-contain bg-white mx-auto border-2 border-[#C9A227] p-0.5" />
+          <p className="font-serif font-bold text-amber-100 text-sm">{settings.cafe_name || "Fana Cafe & Restaurant"}</p>
           <a href={`tel:${String(settings.phone || "0911065022").replace(/\s+/g, "")}`} className="inline-flex items-center gap-2 text-[#C9A227] font-bold text-sm">
             <Phone className="w-4 h-4" /> {settings.phone || "0911 065 022"}
           </a>
@@ -695,8 +695,14 @@ export default function CustomerMenuApp() {
             </a>
           </div>
           <p className="text-[10px] text-stone-600 pt-2">
-            © {new Date().getFullYear()} {settings.cafe_name || "FanaQueen Cafe"} • {settings.plus_code || "2Q7Q+W2 Addis Ababa"} • Powered by your digital menu
+            © {new Date().getFullYear()} {settings.cafe_name || "Fana Cafe"} • {settings.plus_code || "2Q7Q+W2 Addis Ababa"}
           </p>
+          <div className="bg-[#C9A227]/10 border border-[#C9A227]/30 rounded-xl py-2.5 px-3">
+            <p className="text-[11px] font-black text-[#C9A227] tracking-wider uppercase">Powered by Abnet Gobezay</p>
+            <a href="tel:+251919081802" className="text-[11px] font-bold text-stone-300 hover:text-amber-300">
+              📞 +251 91 908 1802 — digital menus for restaurants
+            </a>
+          </div>
         </div>
       </footer>
 

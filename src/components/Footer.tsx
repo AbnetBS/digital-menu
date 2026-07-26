@@ -115,14 +115,17 @@ export default function Footer({ settings, onOpenAdmin, isAdminLoggedIn }: Foote
 
         </div>
 
-        {/* Bottom copyright */}
+        {/* Bottom copyright + developer signature */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-stone-500 text-xs gap-3">
-          <p>© {new Date().getFullYear()} Fana Cafe Addis Ababa. All Rights Reserved.</p>
-          <p className="flex items-center gap-1">
-            <span>Crafted with</span>
-            <Heart className="w-3.5 h-3.5 text-[#C9A227] fill-[#C9A227]" />
-            <span>in Addis Ababa, Ethiopia</span>
-          </p>
+          <p>© {new Date().getFullYear()} {cafeName} Addis Ababa. All Rights Reserved.</p>
+          <a
+            href="tel:+251919081802"
+            className="flex items-center gap-2 bg-[#C9A227]/10 hover:bg-[#C9A227]/20 border border-[#C9A227]/30 px-3.5 py-2 rounded-xl transition"
+          >
+            <Heart className="w-4 h-4 text-[#C9A227] fill-[#C9A227]" />
+            <span className="font-extrabold text-[#C9A227] tracking-wide">Powered by Abnet Gobezay</span>
+            <span className="text-stone-400">📞 +251 91 908 1802</span>
+          </a>
         </div>
 
       </div>

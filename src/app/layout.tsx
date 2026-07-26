@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FanaQueen Cafe & Restaurant — POS & Operations System",
+  title: "Fana Cafe & Restaurant — POS & Operations System",
   description:
-    "Modern restaurant POS and operations management system for FanaQueen Cafe & Restaurant, Addis Ababa — QR table menus, waiter-cashier coordination, payments, and reports.",
+    "Modern restaurant POS and operations management system for Fana Cafe & Restaurant, Addis Ababa — QR table menus, waiter-cashier coordination, payments, and reports.",
   icons: {
     icon: "/logo.png",
     apple: "/logo.png",

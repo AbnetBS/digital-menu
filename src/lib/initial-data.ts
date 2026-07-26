@@ -1,5 +1,5 @@
 export const DEFAULT_SETTINGS = {
-  cafe_name: "FanaQueen Cafe & Restaurant",
+  cafe_name: "Fana Cafe & Restaurant",
   tagline: "Where Great Coffee Meets Beautiful Moments in Addis Ababa",
   hero_title: "Where Great Coffee Meets Beautiful Moments",
   hero_subtitle: "A cozy café and restaurant located at Golagul Building, 22 Square (Djibouti Street, Bole, Addis Ababa). Designed for coffee lovers, food enthusiasts, families, and friends.",
