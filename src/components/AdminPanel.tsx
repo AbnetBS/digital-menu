@@ -68,7 +68,7 @@ export default function AdminPanel({
   const toBase64 = async (file: File, cb: (data: string) => void) => {
     try {
       // Compress on device before saving to Neon (~70KB per photo, forever visible)
-      const small = await compressImage(file, 1000, 0.72);
+      const small = await compressImage(file, 640, 0.6);
       cb(small);
     } catch {
       alert("Couldn't read that image. Please try a JPG/PNG under 10MB.");
@@ -412,6 +412,99 @@ export default function AdminPanel({
         {/* MENU MANAGER */}
         {activeTab === "menu" && (
           <div className="space-y-6">
+            {/* 📂 CATEGORIES MANAGER — owner renames/reorders/adds food groups easily */}
+            <div className="bg-[#2C1B17] rounded-2xl border border-[#C9A227]/30 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-amber-200">📂 Menu Categories ({categories.length})</h3>
+                <p className="text-[10px] text-stone-500">Rename or organize food groups — dishes follow automatically.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((c) => (
+                  <div key={c.id} className="flex items-center gap-1.5 bg-[#3D2314] border border-stone-700 rounded-xl pl-2.5 pr-1 py-1">
+                    <input
+                      defaultValue={c.name}
+                      onBlur={(e) => {
+                        const v = e.target.value.trim();
+                        if (v && v !== c.name) {
+                          fetch("/api/categories", {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ id: c.id, name: v }),
+                          }).then(() => onRefreshData());
+                        }
+                      }}
+                      className="bg-transparent text-xs font-bold text-amber-100 w-28 focus:outline-none"
+                    />
+                    {c.slug !== "all" && (
+                      <button
+                        onClick={async () => {
+                          if (confirm(`Delete category "${c.name}"? Dishes keep their old group (hidden from filters).`)) {
+                            await fetch(`/api/categories?id=${c.id}`, { method: "DELETE" });
+                            onRefreshData();
+                          }
+                        }}
+                        className="w-6 h-6 rounded-md bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white flex items-center justify-center text-xs"
+                        title="Delete category"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const fd = new FormData(e.currentTarget);
+                  const name = String(fd.get("name") || "").trim();
+                  if (!name) return;
+                  const icon = String(fd.get("icon") || "Utensils");
+                  await fetch("/api/categories", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      name,
+                      icon,
+                      slug: name.toLowerCase().replace(/&/g, "").replace(/[^\w\s-]/g, "").trim().replace(/[\s_]+/g, "-"),
+                      sortOrder: categories.length,
+                    }),
+                  });
+                  (e.target as HTMLFormElement).reset();
+                  onRefreshData();
+                }}
+                className="flex flex-wrap gap-2 items-end pt-2 border-t border-stone-800"
+              >
+                <input
+                  name="name"
+                  placeholder="New group name (e.g. Breakfast)"
+                  className="flex-1 min-w-[160px] bg-[#3D2314] border border-stone-700 rounded-xl px-3 py-2 text-xs text-white placeholder-stone-500"
+                />
+                <select
+                  name="icon"
+                  defaultValue="Utensils"
+                  className="bg-[#3D2314] border border-stone-700 rounded-xl px-3 py-2 text-xs text-white"
+                >
+                  <option value="Utensils">🍴 Default</option>
+                  <option value="Soup">🥣 Soup</option>
+                  <option value="Beef">🍔 Burger</option>
+                  <option value="UtensilsCrossed">🍝 Pasta</option>
+                  <option value="Salad">🥗 Salad</option>
+                  <option value="Pizza">🍕 Pizza</option>
+                  <option value="CookingPot">🍚 Rice</option>
+                  <option value="ChefHat">👨‍🍳 Traditional</option>
+                  <option value="Sandwich">🥪 Sandwich</option>
+                  <option value="Package">🌯 Wrap</option>
+                  <option value="GlassWater">🥤 Juice</option>
+                  <option value="Coffee">☕ Hot Drinks</option>
+                  <option value="CupSoda">🧃 Soft Drinks</option>
+                  <option value="Cake">🍰 Pastry</option>
+                </select>
+                <button type="submit" className="bg-[#C9A227] hover:bg-amber-400 text-[#2C1B17] font-black text-xs uppercase px-4 py-2 rounded-xl flex items-center gap-1.5">
+                  <Plus className="w-3.5 h-3.5" /> Add Group
+                </button>
+              </form>
+            </div>
+
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-serif font-bold text-amber-100">Menu Manager</h2>

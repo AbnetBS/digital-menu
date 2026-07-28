@@ -42,7 +42,7 @@ export default function DailyBoardTab() {
 
   const handlePhoto = async (f: File | undefined) => {
     if (!f) return;
-    const small = await compressImage(f, 1000, 0.72);
+    const small = await compressImage(f, 900, 0.68);
     setEditing((prev) => ({ ...prev, imageUrl: small }));
   };
 

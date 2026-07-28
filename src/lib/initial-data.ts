@@ -33,18 +33,59 @@ export const DEFAULT_STAFF = [
 
 export const DEFAULT_CATEGORIES = [
   { id: 1, name: "All Items", slug: "all", icon: "Utensils", sortOrder: 0 },
-  { id: 2, name: "Signature Coffee", slug: "signature-coffee", icon: "Coffee", sortOrder: 1 },
-  { id: 3, name: "Fresh Drinks & Juices", slug: "fresh-drinks", icon: "GlassWater", sortOrder: 2 },
-  { id: 4, name: "Ethiopian Traditional Meals", slug: "food", icon: "CookingPot", sortOrder: 3 },
-  { id: 5, name: "Sandwiches & Snacks", slug: "snacks", icon: "Sandwich", sortOrder: 4 },
-  { id: 6, name: "Cakes & Pastries", slug: "pastries", icon: "Cake", sortOrder: 5 },
+  { id: 2, name: "Soup", slug: "soup", icon: "Soup", sortOrder: 1 },
+  { id: 3, name: "Burger", slug: "burger", icon: "Beef", sortOrder: 2 },
+  { id: 4, name: "Pasta", slug: "pasta", icon: "UtensilsCrossed", sortOrder: 3 },
+  { id: 5, name: "Salad", slug: "salad", icon: "Salad", sortOrder: 4 },
+  { id: 6, name: "Pizza", slug: "pizza", icon: "Pizza", sortOrder: 5 },
+  { id: 7, name: "Rice", slug: "rice", icon: "CookingPot", sortOrder: 6 },
+  { id: 8, name: "Ethiopian Traditional Meals", slug: "ethiopian-traditional-meals", icon: "ChefHat", sortOrder: 7 },
+  { id: 9, name: "Sandwich", slug: "sandwich", icon: "Sandwich", sortOrder: 8 },
+  { id: 10, name: "Snack & Wrap", slug: "snack-and-wrap", icon: "Package", sortOrder: 9 },
+  { id: 11, name: "Juices", slug: "juices", icon: "GlassWater", sortOrder: 10 },
+  { id: 12, name: "Hot Drinks", slug: "hot-drinks", icon: "Coffee", sortOrder: 11 },
+  { id: 13, name: "Soft Drinks", slug: "soft-drinks", icon: "CupSoda", sortOrder: 12 },
+  { id: 14, name: "Pastry & Cakes", slug: "pastry-and-cakes", icon: "Cake", sortOrder: 13 },
 ];
+
+// Legacy slug → new category slug mapping (migration keeps existing items visible)
+export const CATEGORY_SLUG_MAP: Record<string, string> = {
+  "signature-coffee": "hot-drinks",
+  coffee: "hot-drinks",
+  "hot-coffee": "hot-drinks",
+  "macchiato-coffee": "hot-drinks",
+  "fresh-drinks": "juices",
+  "cold-drinks": "juices",
+  smoothies: "juices",
+  food: "ethiopian-traditional-meals",
+  meals: "ethiopian-traditional-meals",
+  "ethiopian-meals": "ethiopian-traditional-meals",
+  traditional: "ethiopian-traditional-meals",
+  "ethiopian-traditional": "ethiopian-traditional-meals",
+  snacks: "snack-and-wrap",
+  "fast-food": "snack-and-wrap",
+  wraps: "snack-and-wrap",
+  wrap: "snack-and-wrap",
+  pastries: "pastry-and-cakes",
+  bakery: "pastry-and-cakes",
+  cakes: "pastry-and-cakes",
+  desserts: "pastry-and-cakes",
+  dessert: "pastry-and-cakes",
+  burger: "burger",
+  burgers: "burger",
+  pizzas: "pizza",
+  salads: "salad",
+  soups: "soup",
+  pasta: "pasta",
+  sandwiches: "sandwich",
+  "soft-drinks": "soft-drinks",
+};
 
 export const DEFAULT_MENU_ITEMS = [
   {
     id: 101,
     name: "The Famous Fana Macchiato",
-    category: "signature-coffee",
+    category: "hot-drinks",
     price: 120,
     description: "Our world-class signature layered Ethiopian macchiato brewed with rich Arabica espresso and steamed microfoam milk.",
     imageUrl: "https://images.pexels.com/photos/6763235/pexels-photo-6763235.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
@@ -58,7 +99,7 @@ export const DEFAULT_MENU_ITEMS = [
   {
     id: 102,
     name: "Mixed Fruit Juice (Spris)",
-    category: "fresh-drinks",
+    category: "juices",
     price: 180,
     description: "Freshly blended multi-layered puree of ripe local avocado, mango, and papaya with optional lemon squeeze.",
     imageUrl: "https://images.pexels.com/photos/31822992/pexels-photo-31822992.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
@@ -72,7 +113,7 @@ export const DEFAULT_MENU_ITEMS = [
   {
     id: 103,
     name: "Chicken Club Sandwich",
-    category: "snacks",
+    category: "sandwich",
     price: 320,
     description: "Triple-decker layered roasted chicken breast, crispy beef bacon, melted cheddar, egg, lettuce, tomato, served with French fries.",
     imageUrl: "https://images.pexels.com/photos/18626291/pexels-photo-18626291.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
@@ -86,7 +127,7 @@ export const DEFAULT_MENU_ITEMS = [
   {
     id: 104,
     name: "Traditional Ethiopian Beyaynet Platter",
-    category: "food",
+    category: "ethiopian-traditional-meals",
     price: 800,
     description: "Generous traditional fasting platter featuring Shiro, Kik Alicha, Misir Wot, Gomen, Atakilt Wot, and fresh Injera.",
     imageUrl: "https://images.pexels.com/photos/6336989/pexels-photo-6336989.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
@@ -100,7 +141,7 @@ export const DEFAULT_MENU_ITEMS = [
   {
     id: 105,
     name: "Golden French Fries",
-    category: "snacks",
+    category: "snack-and-wrap",
     price: 150,
     description: "Crispy skin-on golden potatoes lightly salted and served hot with tomato ketchup and house chili mayo dip.",
     imageUrl: "https://images.pexels.com/photos/18626291/pexels-photo-18626291.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
@@ -114,7 +155,7 @@ export const DEFAULT_MENU_ITEMS = [
   {
     id: 106,
     name: "Traditional Ethiopian Coffee (Jebena)",
-    category: "signature-coffee",
+    category: "hot-drinks",
     price: 90,
     description: "Authentic slow-brewed single-origin Arabica coffee served fresh from a traditional clay Jebena pot.",
     imageUrl: "https://images.pexels.com/photos/36794595/pexels-photo-36794595.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
@@ -128,7 +169,7 @@ export const DEFAULT_MENU_ITEMS = [
   {
     id: 107,
     name: "Special Fruit Punches",
-    category: "fresh-drinks",
+    category: "juices",
     price: 160,
     description: "Ice-chilled naturally refreshing punch made with seasonal Ethiopian fruits including watermelon, passion fruit, and orange.",
     imageUrl: "https://images.pexels.com/photos/33674448/pexels-photo-33674448.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
@@ -142,7 +183,7 @@ export const DEFAULT_MENU_ITEMS = [
   {
     id: 108,
     name: "Ethiopian Spiced Chechebsa",
-    category: "food",
+    category: "ethiopian-traditional-meals",
     price: 240,
     description: "Pan-fried flatbread shredded and coat in herbal spiced butter (Niter Kibbeh) and berbere, served warm with plain yogurt.",
     imageUrl: "https://images.pexels.com/photos/6336989/pexels-photo-6336989.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
@@ -156,7 +197,7 @@ export const DEFAULT_MENU_ITEMS = [
   {
     id: 109,
     name: "Delicious Fresh Cake & Pastries",
-    category: "pastries",
+    category: "pastry-and-cakes",
     price: 200,
     description: "Moist fresh sponge cake with chocolate or vanilla cream frosting, baked fresh daily.",
     imageUrl: "https://images.pexels.com/photos/33313216/pexels-photo-33313216.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",

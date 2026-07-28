@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { categories } from "@/db/schema";
 import { ensureDbSeeded } from "@/lib/seed-db";
 import { ensureTablesExist } from "@/db/migrate";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, sql } from "drizzle-orm";
 
 export async function GET() {
   await ensureTablesExist();
@@ -42,16 +42,32 @@ export async function PUT(request: Request) {
     if (!body.id) {
       return NextResponse.json({ error: "Category ID required" }, { status: 400 });
     }
+
+    const rows = await db.select().from(categories).where(eq(categories.id, Number(body.id)));
+    if (rows.length === 0) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const oldSlug = rows[0].slug;
+    const newSlug = String(
+      body.slug ||
+        body.name?.toLowerCase().replace(/&/g, "").replace(/[^\w\s-]/g, "").trim().replace(/[\s_]+/g, "-") ||
+        oldSlug
+    );
+
     const updated = await db
       .update(categories)
       .set({
-        name: body.name,
-        slug: body.slug,
-        icon: body.icon,
-        sortOrder: Number(body.sortOrder || 0),
+        name: body.name || rows[0].name,
+        slug: newSlug,
+        icon: body.icon || rows[0].icon,
+        sortOrder: body.sortOrder !== undefined ? Number(body.sortOrder) : rows[0].sortOrder,
       })
       .where(eq(categories.id, body.id))
       .returning();
+
+    // When the owner renames a category → menu items follow automatically
+    if (newSlug !== oldSlug) {
+      await db.execute(sql`UPDATE menu_items SET category = ${newSlug} WHERE category = ${oldSlug}`);
+    }
+
     return NextResponse.json(updated[0]);
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });

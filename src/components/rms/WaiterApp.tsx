@@ -55,15 +55,9 @@ export default function WaiterApp() {
   const [payMethod, setPayMethod] = useState<"cash" | "card" | "online" | null>(null);
   const [receiptImage, setReceiptImage] = useState("");
   const [receiptEnabled, setReceiptEnabled] = useState(true);
-
-  const categories = [
+  const [categories, setCategories] = useState<Array<{ slug: string; name: string }>>([
     { slug: "all", name: "All" },
-    { slug: "signature-coffee", name: "Coffee" },
-    { slug: "fresh-drinks", name: "Drinks" },
-    { slug: "food", name: "Meals" },
-    { slug: "snacks", name: "Snacks" },
-    { slug: "pastries", name: "Pastries" },
-  ];
+  ]);
 
   // Ring bell alerts (new QR orders)
   const [alertsOn, setAlertsOn] = useState(false);
@@ -139,6 +133,11 @@ export default function WaiterApp() {
     loadTables();
     const m = await fetch("/api/menu");
     if (m.ok) setMenu(await m.json());
+    const cr = await fetch("/api/categories");
+    if (cr.ok) {
+      const cats = (await cr.json()) as Array<{ slug: string; name: string }>;
+      setCategories(cats.map((c) => ({ slug: c.slug, name: c.name })));
+    }
   };
 
   const login = async () => {

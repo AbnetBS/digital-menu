@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Plus, Minus, Coffee, GlassWater, CookingPot, Sandwich, Cake, Utensils, Check, Sparkles, Clock, Info, Heart } from "lucide-react";
+import {
+  Search, Plus, Minus, Coffee, GlassWater, CookingPot, Sandwich, Cake, Utensils, UtensilsCrossed,
+  Soup, Beef, Pizza, Salad, ChefHat, Package, CupSoda, Clock, Info,
+} from "lucide-react";
 import { MenuItem, Category } from "@/types";
 
 interface MenuSectionProps {
@@ -23,18 +26,31 @@ export default function MenuSection({ items, categories, onAddToCart, cartMap = 
     switch (iconName.toLowerCase()) {
       case "coffee":
         return <Coffee className="w-4 h-4" />;
+      case "cupsoda":
+        return <CupSoda className="w-4 h-4" />;
       case "glasswater":
       case "juices":
         return <GlassWater className="w-4 h-4" />;
       case "cookingpot":
-      case "food":
         return <CookingPot className="w-4 h-4" />;
       case "sandwich":
-      case "snacks":
         return <Sandwich className="w-4 h-4" />;
       case "cake":
-      case "pastries":
         return <Cake className="w-4 h-4" />;
+      case "soup":
+        return <Soup className="w-4 h-4" />;
+      case "beef":
+        return <Beef className="w-4 h-4" />;
+      case "pizza":
+        return <Pizza className="w-4 h-4" />;
+      case "salad":
+        return <Salad className="w-4 h-4" />;
+      case "chefhat":
+        return <ChefHat className="w-4 h-4" />;
+      case "package":
+        return <Package className="w-4 h-4" />;
+      case "utensilscrossed":
+        return <UtensilsCrossed className="w-4 h-4" />;
       default:
         return <Utensils className="w-4 h-4" />;
     }
