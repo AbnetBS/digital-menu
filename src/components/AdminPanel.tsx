@@ -409,6 +409,48 @@ export default function AdminPanel({
           </form>
         )}
 
+        {/* 🗑 FACTORY RESET — one-time zone to clear test data before launching */}
+        {activeTab === "settings" && (
+          <div className="bg-rose-950/30 border-2 border-rose-700/60 rounded-3xl p-6 space-y-4">
+            <div>
+              <h3 className="font-serif font-black text-lg text-rose-300 flex items-center gap-2">🗑 Factory Reset (Danger Zone)</h3>
+              <p className="text-[11px] text-rose-200/70 mt-1">
+                One-time setup zone before launching live. Deletes test orders, photos & announcements you uploaded while testing.
+                This is PERMANENT — there is no undo button. Read each button before pressing.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {(
+                [
+                  { action: "orders", label: "Delete Test Orders", desc: "Bills, receipts, reports → 0" },
+                  { action: "menu", label: "Delete All Menu Items", desc: "Test dishes & photos gone" },
+                  { action: "announcements", label: "Delete Announcements", desc: "Daily Board slides cleared" },
+                  { action: "gallery", label: "Delete Gallery Photos", desc: "Test gallery images gone" },
+                ] as const
+              ).map((b) => (
+                <button
+                  key={b.action}
+                  onClick={async () => {
+                    if (!confirm(`⚠️ ${b.label}?\n\n${b.desc}\n\nThis CANNOT be undone. Continue?`)) return;
+                    const r = await fetch("/api/reset", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ action: b.action }),
+                    });
+                    const d = await r.json();
+                    alert(d.message || d.error || "Done");
+                    onRefreshData();
+                  }}
+                  className="bg-rose-700/40 hover:bg-rose-600/70 border border-rose-500/50 text-rose-100 rounded-2xl p-4 text-left transition group"
+                >
+                  <p className="font-black text-sm group-hover:text-white">{b.label}</p>
+                  <p className="mt-1 text-[10px] text-rose-300/80">{b.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* MENU MANAGER */}
         {activeTab === "menu" && (
           <div className="space-y-6">

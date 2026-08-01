@@ -10,7 +10,12 @@ import {
   DEFAULT_STAFF,
   CATEGORY_SLUG_MAP,
 } from "@/lib/initial-data";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
+
+async function flagOn(key: string): Promise<boolean> {
+  const rows = await db.select().from(siteSettings).where(eq(siteSettings.key, key));
+  return rows.length > 0 && rows[0].value === "on";
+}
 
 export async function ensureDbSeeded(force = false) {
   // NOTE: runs on every call — the 7 tiny SELECTs cost ~50ms total, but this is the ONLY
@@ -18,6 +23,11 @@ export async function ensureDbSeeded(force = false) {
   // mistake), the defaults are restored on the very next request instead of never coming back.
   // (Force parameter kept for /api/setup compatibility.)
   try {
+    // When the owner Factory-Resets a section, flags stop the demo seed from restoring it
+    const menuReset = force ? false : await flagOn("menu_reset_flag");
+    const annReset = force ? false : await flagOn("announcements_reset_flag");
+    const galReset = force ? false : await flagOn("gallery_reset_flag");
+
     const existingSettings = await db.select().from(siteSettings);
     if (existingSettings.length === 0) {
       const settingsToInsert = Object.entries(DEFAULT_SETTINGS).map(([key, value]) => ({
@@ -76,7 +86,7 @@ export async function ensureDbSeeded(force = false) {
     }
 
     const existingMenuItems = await db.select().from(menuItems);
-    if (existingMenuItems.length === 0) {
+    if (existingMenuItems.length === 0 && !menuReset) {
       await db.insert(menuItems).values(
         DEFAULT_MENU_ITEMS.map((item) => ({
           name: item.name,
@@ -109,7 +119,7 @@ export async function ensureDbSeeded(force = false) {
     }
 
     const existingGallery = await db.select().from(galleryItems);
-    if (existingGallery.length === 0) {
+    if (existingGallery.length === 0 && !galReset) {
       await db.insert(galleryItems).values(
         DEFAULT_GALLERY.map((gal) => ({
           title: gal.title,
