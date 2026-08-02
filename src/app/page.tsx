@@ -20,10 +20,10 @@ import { DEFAULT_SETTINGS, DEFAULT_CATEGORIES, DEFAULT_MENU_ITEMS, DEFAULT_REVIE
 
 export default function HomePage() {
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS as SiteSettings);
-  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES as Category[]);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(DEFAULT_MENU_ITEMS as MenuItem[]);
-  const [reviews, setReviews] = useState<Review[]>(DEFAULT_REVIEWS as Review[]);
-  const [gallery, setGallery] = useState<GalleryItem[]>(DEFAULT_GALLERY as GalleryItem[]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
   const loadSiteData = async () => {

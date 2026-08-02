@@ -25,9 +25,12 @@ export default function CustomerMenuApp() {
   const searchParams = useSearchParams();
   const tableId = Number(searchParams.get("table") || 0);
 
+  // Start with EMPTY states — NEVER flash the default demo items for those first seconds.
+  // Customers now see a branded loading skeleton until real menu data arrives from the database.
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS as SiteSettings);
-  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES as Category[]);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(DEFAULT_MENU_ITEMS as MenuItem[]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [menuLoading, setMenuLoading] = useState(true);
   const [tableName, setTableName] = useState(tableId ? `Table ${tableId}` : "");
 
   const [category, setCategory] = useState("all");
@@ -98,6 +101,7 @@ export default function CustomerMenuApp() {
           setMenuItems(allMenu);
           fresh.menuItems = allMenu;
         }
+        setMenuLoading(false); // skeleton disappears ONLY after real menu lands — no demo flash, no demo data
         if (t.ok) {
           const tables: CafeTable[] = await t.json();
           const found = tables.find((x) => x.id === tableId);
@@ -124,7 +128,9 @@ export default function CustomerMenuApp() {
         try {
           sessionStorage.setItem("fana_menu_cache", JSON.stringify({ t: Date.now(), data: fresh }));
         } catch {}
-      } catch {}
+      } catch {
+        setMenuLoading(false);
+      }
     })();
   }, [tableId]);
 
@@ -463,6 +469,35 @@ export default function CustomerMenuApp() {
         </div>
       </div>
 
+      {/* Branded skeleton — replaces the old "default items flash" while menu loads */}
+      {menuLoading && menuItems.length === 0 && (
+        <div className="px-4 glass-skeleton max-w-lg mx-auto space-y-4 pt-2">
+          <div className="text-center py-6 space-y-2">
+            <div className="relative w-14 h-14 mx-auto">
+              <img src={logoUrl} alt="Loading" className="w-14 h-14 rounded-full object-contain bg-white border-2 border-[#C9A227] p-0.5 animate-pulse" />
+              <span className="absolute inset-0 rounded-full border-2 border-[#C9A227] animate-ping opacity-30" />
+            </div>
+            <p className="font-serif font-bold text-sm text-[#2C1B17]">Loading menu...</p>
+            <p className="text-[11px] text-stone-500">Your table's dishes are on the way ☕</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden border border-stone-200 shadow-sm animate-pulse">
+                <div className="w-full h-28 bg-stone-200" />
+                <div className="p-3 space-y-2">
+                  <div className="h-3 bg-stone-200 rounded w-4/5" />
+                  <div className="h-2.5 bg-stone-200 rounded w-2/3" />
+                  <div className="flex justify-between pt-1">
+                    <div className="h-4 bg-stone-200 rounded w-14" />
+                    <div className="h-6 bg-stone-200 rounded w-16" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* menu grid */}
       <div className="px-4 grid grid-cols-2 gap-3 max-w-lg mx-auto">
         {filteredMenu.map((m) => {
@@ -537,10 +572,10 @@ export default function CustomerMenuApp() {
             </div>
           );
         })}
-        {filteredMenu.length === 0 && (
+        {!menuLoading && filteredMenu.length === 0 && (
           <div className="col-span-2 text-center py-12 text-stone-400 text-sm">
             <Utensils className="w-8 h-8 mx-auto mb-2 text-stone-300" />
-            Nothing found in this category.
+            Nothing found in this category — please ask a waiter if the menu looks incomplete.
           </div>
         )}
       </div>
