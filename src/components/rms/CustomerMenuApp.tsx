@@ -10,6 +10,7 @@ import { MenuItem, Category, CafeTable, SiteSettings, Announcement, GalleryItem,
 import { DEFAULT_SETTINGS, DEFAULT_CATEGORIES, DEFAULT_MENU_ITEMS } from "@/lib/initial-data";
 import { effectivePrice } from "@/lib/price";
 import { fixBrandText } from "@/lib/brand";
+import GoogleTranslateToggle from "@/components/GoogleTranslateToggle";
 
 interface CartEntry {
   menuItemId: number;
@@ -337,6 +338,7 @@ export default function CustomerMenuApp() {
   /* ── MAIN MENU ── */
   return (
     <div className="min-h-screen bg-[#FAF6F0] pb-28">
+      <GoogleTranslateToggle />
       {/* Header with logo */}
       <header className="bg-[#2C1B17] text-white sticky top-0 z-40 shadow-xl">
         <div className="px-4 py-2.5 flex items-center justify-between max-w-lg mx-auto">
