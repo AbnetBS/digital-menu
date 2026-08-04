@@ -12,6 +12,8 @@ async function recomputeTotal(ticketId: number) {
 }
 
 // GET: ?active=1 → active tickets (with items); ?all=1 → everything
+// TRAFFIC FIX: list responses EXCLUDE receipt photos (they're heavy base64 polygons).
+// Receipts are fetched on-demand via /api/tickets/receipt?id=X when someone clicks "View Receipt".
 export async function GET(request: Request) {
   await ensureTablesExist();
   try {
@@ -22,11 +24,19 @@ export async function GET(request: Request) {
       ? await db.select().from(tickets).where(notInArray(tickets.status, ["paid", "cancelled"])).orderBy(desc(tickets.updatedAt))
       : await db.select().from(tickets).orderBy(desc(tickets.updatedAt)).limit(100);
 
+    // list WITHOUT the receiptImage column (heavy payload), kept for CSV missing fallback key
+    const slim = list.map((t) => {
+      const clone: Record<string, unknown> = { ...t };
+      delete clone.receiptImage;
+      return clone;
+    });
+
     const items = await db.select().from(ticketItems).orderBy(asc(ticketItems.id));
 
-    const result = list.map((t) => ({
+    const result = slim.map((t) => ({
       ...t,
-      items: items.filter((i) => i.ticketId === t.id),
+      receiptImage: null, // keep field defined so clients know it needs fetching on demand
+      items: items.filter((i) => i.ticketId === (t as { id: number }).id),
     }));
 
     return NextResponse.json(result);

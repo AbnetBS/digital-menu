@@ -17,7 +17,7 @@ export async function GET() {
       // historical "FanaQueen"/double-Cafe text to any client, even if the DB holds it.
       settingsMap[s.key] = fixBrandText(s.value);
     });
-    return NextResponse.json(settingsMap);
+    return NextResponse.json(settingsMap, { status: 200, headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" } });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }

@@ -43,6 +43,19 @@ export default function DailyBoardTab() {
   const handlePhoto = async (f: File | undefined) => {
     if (!f) return;
     const small = await compressImage(f, 900, 0.68);
+    try {
+      const res = await fetch("/api/images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataUrl: small }),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        if (d.url) { setEditing((prev) => ({ ...prev, imageUrl: d.url })); return; }
+      }
+    } catch {
+      /* fallback below */
+    }
     setEditing((prev) => ({ ...prev, imageUrl: small }));
   };
 

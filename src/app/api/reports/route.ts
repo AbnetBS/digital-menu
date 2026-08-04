@@ -111,14 +111,13 @@ export async function GET() {
       revenue: v.revenue,
     }));
 
-    // Receipt photos attached to card/online payments
+    // Receipt METADATA list only — photos load on demand via /api/tickets/receipt?id=
     const receipts = revenueTickets
       .filter((t) => t.receiptImage)
       .map((t) => ({
         id: t.id,
         tableName: t.tableName,
         method: t.paymentMethod || "online",
-        receiptImage: t.receiptImage as string,
         totalAmount: t.totalAmount || 0,
         closedAt: t.closedAt ? String(t.closedAt) : null,
       }))

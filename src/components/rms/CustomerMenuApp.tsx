@@ -64,7 +64,7 @@ export default function CustomerMenuApp() {
       const cached = sessionStorage.getItem("fana_menu_cache");
       if (cached) {
         const { t: cachedAt, data } = JSON.parse(cached);
-        if (Date.now() - cachedAt < 120_000 && data) {
+        if (Date.now() - cachedAt < 300_000 && data) {
           if (data.menuItems) setMenuItems(data.menuItems);
           if (data.categories) setCategories(data.categories);
           if (data.announcements) setAnnouncements(data.announcements);

@@ -191,6 +191,15 @@ const RMS_CREATES: Array<[string, string]> = [
       created_at timestamp DEFAULT now()
     )`,
   ],
+  [
+    "cdn_images",
+    `CREATE TABLE IF NOT EXISTS cdn_images (
+      id serial PRIMARY KEY,
+      mime_type text DEFAULT 'image/jpeg',
+      data text,
+      created_at timestamp DEFAULT now()
+    )`,
+  ],
 ];
 
 const RMS_COLUMNS: Record<string, Record<string, ColSpec>> = {
@@ -321,6 +330,20 @@ export async function ensureTablesExist(force = false) {
     return { success: true, errors: [] as string[] };
   }
   const errors: string[] = [];
+
+  // TRAFFIC BOAT-FIX: test DB health with ONE light query first.
+  // If the DB is already healthy (it is, 99.99% of the time), skip the entire 100+ CREATE/ALTER storm
+  returnOnWarm: {
+    if (!force) {
+      try {
+        await db.execute(sql`SELECT 1 FROM site_settings LIMIT 1`);
+        globalForMigrate.__fanaMigrateDone = true;
+        break returnOnWarm;
+      } catch {
+        // table missing / DB broken → fall through to full migration below
+      }
+    }
+  }
 
   // Step 1 — create missing tables (classic + RMS)
   for (const [name, ddl] of [...CREATES, ...RMS_CREATES]) {

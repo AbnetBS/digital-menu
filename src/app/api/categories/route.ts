@@ -10,7 +10,7 @@ export async function GET() {
   await ensureDbSeeded();
   try {
     const list = await db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.id));
-    return NextResponse.json(list);
+    return NextResponse.json(list, { status: 200, headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" } });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }

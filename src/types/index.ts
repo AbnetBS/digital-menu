@@ -147,7 +147,7 @@ export interface ReportData {
   popularItems: Array<{ name: string; quantity: number; revenue: number }>;
   categorySales: Array<{ category: string; revenue: number }>;
   paymentStats: Array<{ method: string; count: number; revenue: number }>;
-  receipts: Array<{ id: number; tableName: string; method: string; receiptImage: string; totalAmount: number; closedAt?: string | null }>;
+  receipts: Array<{ id: number; tableName: string; method: string; receiptImage?: string; totalAmount: number; closedAt?: string | null }>;
   hourlySales?: Array<{ hour: number; orders: number; revenue: number }>;
   peakHour?: { hour: number; orders: number; revenue: number } | null;
 }

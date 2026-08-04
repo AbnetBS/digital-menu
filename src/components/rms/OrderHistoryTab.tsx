@@ -153,9 +153,13 @@ export default function OrderHistoryTab() {
                 <span className="flex items-center gap-1.5 text-xs font-bold capitalize">
                   {methodIcon(o.paymentMethod)} {o.paymentMethod || "cash"} payment
                 </span>
-                {o.receiptImage && (
+                {(o.status === "paid" || o.status === "completed") && o.paymentMethod !== "cash" && (
                   <button
-                    onClick={() => setReceiptModal(o.receiptImage as string)}
+                    onClick={async () => {
+                      const r = await fetch(`/api/tickets/receipt?id=${o.id}`);
+                      const d = await r.json();
+                      if (d.receiptImage) setReceiptModal(d.receiptImage);
+                    }}
                     className="flex items-center gap-1 text-[10px] font-bold text-sky-300 bg-sky-900/40 px-2 py-1 rounded-lg hover:bg-sky-800"
                   >
                     <ImageIcon className="w-3 h-3" /> Receipt

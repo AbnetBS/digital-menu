@@ -105,6 +105,8 @@ export default function WaiterApp() {
   };
 
   const loadTables = async () => {
+    // TRAFFIC FIX: skip polling while the tab is not visible
+    if (typeof document !== "undefined" && document.hidden) return;
     const r = await fetch("/api/tables");
     if (r.ok) setTables(await r.json());
 
@@ -702,6 +704,19 @@ export default function WaiterApp() {
                     try {
                       // Compress on device: ~4MB camera photo → ~70KB, stored safely in Neon
                       const small = await compressImage(f, 800, 0.65);
+                      try {
+                        const res = await fetch("/api/images", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ dataUrl: small }),
+                        });
+                        if (res.ok) {
+                          const d = await res.json();
+                          if (d.url) { setReceiptImage(d.url); return; }
+                        }
+                      } catch {
+                        /* fallback below */
+                      }
                       setReceiptImage(small);
                     } catch {
                       showToast("Could not read that photo — try again");

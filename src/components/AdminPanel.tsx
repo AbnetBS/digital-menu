@@ -67,9 +67,23 @@ export default function AdminPanel({
 
   const toBase64 = async (file: File, cb: (data: string) => void) => {
     try {
-      // Compress on device before saving to Neon (~70KB per photo, forever visible)
+      // NETWORK RESCUE: compress on device, save ONCE to internal image API → short URL,
+      // browsers download each photo ONE TIME forever (never through JSON again).
       const small = await compressImage(file, 640, 0.6);
-      cb(small);
+      try {
+        const res = await fetch("/api/images", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dataUrl: small }),
+        });
+        if (res.ok) {
+          const d = await res.json();
+          if (d.url) { cb(d.url); return; }
+        }
+      } catch {
+        /* silent fallback right below */
+      }
+      cb(small); // fallback: keep embedded-compressed photo if API lid shifts
     } catch {
       alert("Couldn't read that image. Please try a JPG/PNG under 10MB.");
     }

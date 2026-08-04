@@ -67,6 +67,8 @@ export default function CashierDashboard() {
   };
 
   const loadAll = async () => {
+    // TRAFFIC FIX: don't poll when this browser tab isn't on-screen (TikTok breaks don't cost data)
+    if (typeof document !== "undefined" && document.hidden) return;
     const [tRes, tkRes] = await Promise.all([fetch("/api/tables"), fetch("/api/tickets?all=1")]);
     if (tRes.ok) setTables(await tRes.json());
     if (tkRes.ok) {
@@ -104,7 +106,7 @@ export default function CashierDashboard() {
   useEffect(() => {
     if (staffName) {
       loadAll();
-      const t = setInterval(loadAll, 6000);
+      const t = setInterval(loadAll, 8000);
       return () => clearInterval(t);
     }
   }, [staffName]);
@@ -386,9 +388,14 @@ export default function CashierDashboard() {
                           {methodIcon(t.paymentMethod)}
                           <span className="font-bold capitalize">{t.paymentMethod ? `${t.paymentMethod} payment` : "Awaiting payment method"}</span>
                         </div>
-                        {t.receiptImage && (
+                        {t.status === "completed" && t.paymentMethod !== "cash" && (
                           <button
-                            onClick={() => setReceiptModal(t.receiptImage as string)}
+                            onClick={async () => {
+                              // fetch receipt photo ON DEMAND — saves ~70KB × 100s of polling transfers per day
+                              const r = await fetch(`/api/tickets/receipt?id=${t.id}`);
+                              const d = await r.json();
+                              if (d.receiptImage) setReceiptModal(d.receiptImage);
+                            }}
                             className="flex items-center gap-1 text-[11px] font-bold text-sky-300 bg-sky-900/40 px-2.5 py-1 rounded-lg hover:bg-sky-800"
                           >
                             <ImageIcon className="w-3.5 h-3.5" /> Receipt Photo

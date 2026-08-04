@@ -194,12 +194,23 @@ export default function ReportsTab() {
             {data.receipts.length === 0 ? (
               <p className="text-xs text-stone-500">No receipt photos uploaded yet. They appear when waiters photograph card/online receipts.</p>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {data.receipts.map((r) => (
-                  <button key={r.id} onClick={() => setReceiptModal(r.receiptImage)} className="group text-left">
-                    <img src={r.receiptImage} alt="Receipt" className="w-full h-28 object-cover rounded-xl border border-stone-700 group-hover:border-[#C9A227] transition" />
-                    <p className="text-[10px] font-bold text-stone-300 mt-1 truncate">{r.tableName}</p>
-                    <p className="text-[9px] text-stone-500 capitalize">{r.method} • {r.totalAmount} ETB</p>
+                  <button
+                    key={r.id}
+                    onClick={async () => {
+                      // load the photo only WHEN the owner click-idle — never bundled in reports
+                      const resp = await fetch(`/api/tickets/receipt?id=${r.id}`);
+                      const d = await resp.json();
+                      if (d.receiptImage) setReceiptModal(d.receiptImage);
+                    }}
+                    className="group text-left bg-black/30 border border-stone-700 rounded-xl p-3 hover:border-[#C9A227] transition"
+                  >
+                    <p className="text-[11px] font-bold text-amber-100 truncate">{r.tableName}</p>
+                    <p className="text-[10px] text-stone-500 capitalize">{r.method} • {r.totalAmount} ETB</p>
+                    <span className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-extrabold text-sky-300">
+                      📷 View Receipt
+                    </span>
                   </button>
                 ))}
               </div>
